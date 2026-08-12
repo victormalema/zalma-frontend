@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<meta name="theme-color" content="#F7F5EF">
+<meta name="description" content="ZALMA — A New Chapter Begins. Luxury fashion house redefining modern elegance.">
+<title>ZALMA — A New Chapter Begins</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ivory:#F7F5EF;
+    --ink:#15140F;
+    --bronze:#9C7A4E;
+    --bronze-soft:#C7A876;
+    --ease-out-expo:cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-smooth:cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;}
+  body{background:var(--ivory);color:var(--ink);font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;overflow-x:hidden;line-height:1.6;}
+  ::selection{background:var(--bronze);color:var(--ivory);}
+  img{max-width:100%;height:auto;display:block;}
+  a{color:inherit;text-decoration:none;}
+  button{font-family:inherit;border:none;background:none;cursor:pointer;}
+  ul,ol{list-style:none;}
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;scroll-behavior:auto !important;}
+    .video-frame{transition:none !important;}
+    .scroll-cue .line::after{animation:none !important;}
+  }
+
+  .hero-wrapper{position:relative;height:320vh;background:var(--ivory);contain:layout style;}
+  .hero-pin{position:sticky;top:0;height:100vh;width:100%;overflow:hidden;background:var(--ivory);contain:layout paint;}
+  .composition{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:10vh 6vw;pointer-events:none;}
+  .brand-slot{font-family:'Fraunces', serif;font-weight:500;font-size:1.1rem;letter-spacing:0.34em;text-transform:uppercase;opacity:0;margin-bottom:3vh;}
+  .headline{font-family:'Inter',sans-serif;font-weight:600;text-transform:uppercase;line-height:0.95;letter-spacing:-0.02em;font-size:clamp(2.2rem, 10vw, 6rem);color:var(--ink);}
+  .headline .row{display:block;}
+  .frame-slot{width:min(72vw, 340px);aspect-ratio:4/3;margin:2vh auto;opacity:0;pointer-events:none;}
+
+  .video-frame{position:fixed;top:0;left:0;width:100vw;height:100vh;overflow:hidden;background:#0a0a0a;z-index:6;will-change:top,left,width,height,border-radius,transform;contain:layout paint;backface-visibility:hidden;}
+  .video-frame video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;will-change:transform;transform:scale(1);transform-origin:center center;filter:brightness(0.78) saturate(1.08) contrast(1.02);backface-visibility:hidden;}
+  .video-frame::after{content:'';position:absolute;inset:0;box-shadow:inset 0 0 14vw rgba(0,0,0,0.32);pointer-events:none;}
+  .video-frame .video-fallback{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none;}
+  .video-frame video:not([src]) + .video-fallback,.video-frame video[src=""] + .video-fallback{display:block;}
+
+  .brand-fly{position:fixed;left:50%;z-index:7;transform:translate(-50%,-50%);font-family:'Fraunces', serif;font-weight:500;font-style:normal;font-optical-sizing:auto;letter-spacing:0.06em;color:var(--ivory);text-transform:uppercase;white-space:nowrap;pointer-events:none;text-shadow:0 2px 40px rgba(0,0,0,0.35);will-change:top,font-size,letter-spacing,color,text-shadow,transform;backface-visibility:hidden;}
+
+  .scroll-cue{position:fixed;left:50%;bottom:2.4rem;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:0.5rem;z-index:8;transition:opacity 0.5s var(--ease-smooth);pointer-events:none;}
+  .scroll-cue span{font-family:'Inter',sans-serif;font-size:0.6rem;letter-spacing:0.32em;text-transform:uppercase;color:var(--ivory);mix-blend-mode:difference;}
+  .scroll-cue .line{width:1px;height:28px;background:var(--ivory);mix-blend-mode:difference;overflow:hidden;position:relative;}
+  .scroll-cue .line::after{content:'';position:absolute;top:-100%;left:0;width:100%;height:100%;background:var(--bronze-soft);animation:travel 1.8s ease-in-out infinite;}
+  @keyframes travel{0%{top:-100%;}100%{top:100%;}}
+
+  .enter-btn{
+    position:fixed;
+    left:50%;
+    bottom:2.4rem;
+    transform:translateX(-50%) scale(0.9);
+    z-index:9;
+    padding:14px 48px;
+    font-family:'Inter',sans-serif;
+    font-weight:500;
+    font-size:0.7rem;
+    letter-spacing:0.25em;
+    text-transform:uppercase;
+    color:var(--ivory);
+    background:rgba(21,20,15,0.6);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:60px;
+    cursor:pointer;
+    transition:all 0.6s var(--ease-out-expo);
+    text-decoration:none;
+    display:inline-block;
+    pointer-events:none;
+    opacity:0;
+  }
+
+  .enter-btn.visible{
+    opacity:1;
+    transform:translateX(-50%) scale(1);
+    pointer-events:auto;
+  }
+
+  .enter-btn:hover{
+    background:var(--ivory);
+    color:var(--ink);
+    border-color:var(--ivory);
+    transform:translateX(-50%) scale(1.04);
+  }
+
+  .enter-btn:active{
+    transform:translateX(-50%) scale(0.96);
+  }
+
+  .video-frame, .brand-fly, .scroll-cue{-webkit-transform:translateZ(0);transform:translateZ(0);}
+  .hero-wrapper{content-visibility:visible;}
+</style>
+</head>
+
+<body>
+
+<div class="hero-wrapper" id="heroWrapper">
+  <div class="hero-pin">
+    <div class="composition">
+      <div class="brand-slot" id="brandSlot">Zalma</div>
+      <h1 class="headline">
+        <span class="row">A New</span>
+        <span class="row">Chapter</span>
+      </h1>
+      <div class="frame-slot" id="frameSlot"></div>
+      <h1 class="headline">
+        <span class="row">Begins</span>
+      </h1>
+    </div>
+    <div class="video-frame" id="frame" role="img" aria-label="ZALMA campaign video">
+      <video id="bgVideo" autoplay muted loop playsinline preload="metadata" poster="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1920&q=80">
+        <source src="VID-20260501-WA0000.mp4" type="video/mp4">
+      </video>
+      <img class="video-fallback" src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1920&q=80" alt="ZALMA campaign">
+    </div>
+    <h1 class="brand-fly" id="brandFly">Zalma</h1>
+  </div>
+</div>
+
+<div class="scroll-cue" id="scrollCue" aria-hidden="true">
+  <span>Scroll</span>
+  <div class="line"></div>
+</div>
+
+<a href="home.html" class="enter-btn" id="enterBtn">Enter</a>
+
+<script>
+
+(function(){
+  'use strict';
+
+  // ==================== HERO SCROLL ANIMATION ====================
+  const wrapper   = document.getElementById('heroWrapper');
+  const frame     = document.getElementById('frame');
+  const video     = document.getElementById('bgVideo');
+  const cue       = document.getElementById('scrollCue');
+  const brandFly  = document.getElementById('brandFly');
+  const brandSlot = document.getElementById('brandSlot');
+  const frameSlot = document.getElementById('frameSlot');
+  const enterBtn  = document.getElementById('enterBtn');
+
+  const FRAME_MAX_RADIUS = 18;
+  const VIDEO_MAX_SCALE  = 1.2;
+  const BRAND_START_SIZE = 11;
+  const BRAND_END_SIZE   = 1.35;
+  const BRAND_START_TRACK = 0.06;
+  const BRAND_END_TRACK   = 0.34;
+
+  let ticking = false;
+  let progress = 0;
+  let frameTargetRect = null;
+  let brandTargetRect = null;
+  let enterBtnShown = false;
+
+  function clamp(v, min, max){ return Math.min(Math.max(v, min), max); }
+  function lerp(a, b, t){ return a + (b - a) * t; }
+
+  function easeInOutCubic(t){
+    return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;
+  }
+
+  function measureTargets(){
+    frameTargetRect = frameSlot.getBoundingClientRect();
+    brandTargetRect = brandSlot.getBoundingClientRect();
+  }
+
+  function computeProgress(){
+    const rect = wrapper.getBoundingClientRect();
+    const total = wrapper.offsetHeight - window.innerHeight;
+    if (total <= 0) return 0;
+    const raw = -rect.top / total;
+    return clamp(raw, 0, 1);
+  }
+
+  function render(){
+    const p = easeInOutCubic(progress);
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+
+    const fStart = { top:0, left:0, width:vw, height:vh };
+    const fEnd   = frameTargetRect;
+
+    frame.style.top    = lerp(fStart.top,    fEnd.top,    p) + 'px';
+    frame.style.left   = lerp(fStart.left,   fEnd.left,   p) + 'px';
+    frame.style.width  = lerp(fStart.width,  fEnd.width,  p) + 'px';
+    frame.style.height = lerp(fStart.height, fEnd.height, p) + 'px';
+    frame.style.borderRadius = (p * FRAME_MAX_RADIUS) + 'px';
+
+    video.style.transform = `scale(${lerp(1, VIDEO_MAX_SCALE, p)})`;
+
+    const bStartTop = vh / 2;
+    const bEndTop   = brandTargetRect.top + brandTargetRect.height / 2;
+
+    brandFly.style.top = lerp(bStartTop, bEndTop, p) + 'px';
+    brandFly.style.fontSize = lerp(BRAND_START_SIZE, BRAND_END_SIZE, p) + 'rem';
+    brandFly.style.letterSpacing = lerp(BRAND_START_TRACK, BRAND_END_TRACK, p) + 'em';
+
+    const shadowOpacity = lerp(0.35, 0, p);
+    brandFly.style.color = p > 0.72 ? 'var(--ink)' : 'var(--ivory)';
+    brandFly.style.textShadow = `0 2px 40px rgba(0,0,0,${shadowOpacity})`;
+
+    cue.style.opacity = progress > 0.04 ? '0' : '1';
+
+    // Show enter button when animation is complete (progress > 0.98)
+    if (progress > 0.98 && !enterBtnShown) {
+      enterBtn.classList.add('visible');
+      enterBtnShown = true;
+    }
+
+    ticking = false;
+  }
+
+  function onScroll(){
+    progress = computeProgress();
+    if (!ticking){
+      requestAnimationFrame(render);
+      ticking = true;
+    }
+  }
+
+  let resizeTimeout;
+  function onResize(){
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(function(){
+      measureTargets();
+      onScroll();
+    }, 100);
+  }
+
+  measureTargets();
+  window.addEventListener('scroll', onScroll, { passive:true });
+  window.addEventListener('resize', onResize);
+  onScroll();
+
+})();
+</script>
+
+</body>
+</html>

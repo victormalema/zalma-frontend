@@ -1,0 +1,7 @@
+venv/
+zalma-backend/
+zalma-backend-new/
+zalma-backend-updated/
+*.zip
+__pycache__/
+.DS_Store
