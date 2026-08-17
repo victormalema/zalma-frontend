@@ -70,6 +70,13 @@ const ZalmaAPI = {
   getBadges(){ return this._request('/badges'); },
 // ---------- rank / tiers ----------
   getRank(){ return this._request('/rank'); },
+// ---------- social follows ----------
+  claimFollow(platform){ return this._request('/social/follow', { method: 'POST', body: JSON.stringify({ platform }) }); },
+  getClaimedFollows(){ return this._request('/social/follow'); },
+
+  // ---------- unboxing ----------
+  submitUnboxing(videoUrl){ return this._request('/unboxing', { method: 'POST', body: JSON.stringify({ video_url: videoUrl }) }); },
+  getUnboxings(){ return this._request('/unboxing'); },
 
   // ---------- wall of honor ----------
   getLeaderboard(){ return this._request('/wall/leaderboard'); },

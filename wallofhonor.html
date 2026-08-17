@@ -17,17 +17,21 @@
 /* ---------- Design tokens ---------- */
 :root{
   /* colors */
-  --c-bg: #F8F6F1;
-  --c-bg-raised: #FFFFFF;
-  --c-ink: #1E1E1E;
-  --c-ink-soft: #3A3835;
-  --c-bronze: #A67C52;
-  --c-bronze-dark: #8E6740;
-  --c-gray: #8E8A84;
-  --c-olive: #6D7B5C;
-  --c-line: rgba(30,30,30,0.10);
-  --c-line-soft: rgba(30,30,30,0.06);
-  --c-overlay: rgba(30,30,30,0.55);
+  --c-bg: #F6F5F1;
+  --c-bg-raised: #F0F2EE;
+  --c-ink: #121318;
+  --c-ink-soft: #696371;
+  --c-bronze: #696371;
+  --c-bronze-dark: #121318;
+  --c-gray: #AFB2B9;
+  --c-olive: #C9CAD2;
+  --c-line: rgba(18,19,24,0.10);
+  --c-line-soft: rgba(18,19,24,0.06);
+  --c-overlay: rgba(18,19,24,0.55);
+
+  --c-blob-1: #C9CAD2;
+  --c-blob-2: #AFB2B9;
+  --c-blob-3: #79D3C8;
 
   /* type */
   --f-display: 'Cormorant Garamond', 'Times New Roman', serif;
@@ -74,10 +78,58 @@ html{ scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce){
   html{ scroll-behavior: auto; }
   *, *::before, *::after{ animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  .live-bg span{ animation: none !important; }
 }
+
+.live-bg{
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--c-bg);
+}
+.live-bg span{
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(50px);
+  opacity: 0.5;
+  will-change: transform;
+}
+.live-bg span:nth-child(1){
+  width: 60vw; height: 60vw;
+  top: -15vw; left: -10vw;
+  background: radial-gradient(circle, var(--c-blob-1), transparent 70%);
+  animation: driftA 26s ease-in-out infinite;
+}
+.live-bg span:nth-child(2){
+  width: 50vw; height: 50vw;
+  bottom: -10vw; right: -10vw;
+  background: radial-gradient(circle, var(--c-blob-2), transparent 70%);
+  animation: driftB 32s ease-in-out infinite;
+}
+.live-bg span:nth-child(3){
+  width: 40vw; height: 40vw;
+  top: 30vh; left: 40vw;
+  background: radial-gradient(circle, var(--c-blob-3), transparent 70%);
+  animation: driftC 22s ease-in-out infinite;
+}
+@keyframes driftA{
+  0%,100%{ transform: translate(0,0); }
+  50%{ transform: translate(6vw,8vh); }
+}
+@keyframes driftB{
+  0%,100%{ transform: translate(0,0); }
+  50%{ transform: translate(-8vw,-6vh); }
+}
+@keyframes driftC{
+  0%,100%{ transform: translate(0,0); }
+  50%{ transform: translate(-5vw,5vh); }
+}
+
 body{
   margin: 0;
-  background: var(--c-bg);
+  background: transparent;
   color: var(--c-ink);
   font-family: var(--f-body);
   font-weight: 400;
@@ -524,7 +576,7 @@ h3, .h3{
   padding: 14px 18px;
   border: 1px solid var(--c-line);
   border-radius: var(--r-sm);
-  background: #fff;
+  background: var(--c-bg-raised);
   font-size: 14px;
 }
 .newsletter-form input:focus{ border-color: var(--c-bronze); outline: none; }
@@ -700,7 +752,7 @@ h3, .h3{
 .field label{ display: block; font-size: 12px; letter-spacing: 0.05em; text-transform: uppercase; color: var(--c-gray); margin-bottom: var(--sp-2); }
 .field input, .field select{
   width: 100%; padding: 13px 16px; border: 1px solid var(--c-line); border-radius: var(--r-sm);
-  background: #fff; font-size: 14px;
+  background: var(--c-bg-raised); font-size: 14px;
 }
 .field input:focus, .field select:focus{ outline: none; border-color: var(--c-bronze); }
 .field-row{ display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); }
@@ -1077,7 +1129,8 @@ h3, .h3{
 
 </style>
 </head>
-<body data-page="mymark.html">
+<body data-page="wallofhonor.html">
+<div class="live-bg"><span></span><span></span><span></span></div>
 
 <div id="navbar-root"></div>
 
@@ -1105,7 +1158,7 @@ h3, .h3{
 <div id="footer-root"></div>
 <div id="bottomnav-root"></div>
 
-<script src="api.js"></script>
+
 <script>
 /* =========================================================
    ZALMA — Static data layer
@@ -1378,7 +1431,7 @@ const Icon = {
 };
 
 const NAV_ITEMS = [
-  { href: 'index.html', label: 'Home', icon: 'home' },
+  { href: 'home.html', label: 'Home', icon: 'home' },
   { href: 'collections.html', label: 'Collections', icon: 'collection' },
   { href: 'mymark.html', label: 'My Mark', icon: 'mark' },
   { href: 'rewards.html', label: 'Rewards', icon: 'rewards' },
@@ -1655,57 +1708,41 @@ document.addEventListener('DOMContentLoaded', () => {
   const backIcon = document.getElementById('backIconWrap');
   if(backIcon) backIcon.innerHTML = Icon.chevronLeft;
 
-  const podiumFull = document.getElementById('podiumFull');
-  const leaderboardList = document.getElementById('leaderboardList');
-  const userRow = document.getElementById('userRow');
-  userRow.classList.remove('reveal');
+  const board = ZALMA_DATA.leaderboard;
+  const top3 = board.slice(0, 3);
+  const rest = board.slice(3);
+  const user = ZALMA_DATA.user;
 
-  Promise.all([
-    ZalmaAPI.getLeaderboard(),
-    ZalmaAPI.isLoggedIn() ? ZalmaAPI.me() : Promise.resolve(null)
-  ]).then(([lbRes, meRes]) => {
-    const board = lbRes.leaderboard;
-    const top3 = board.slice(0, 3);
-    const rest = board.slice(3);
+  document.getElementById('podiumFull').innerHTML = top3.map(p => `
+    <div class="podium-card rank-${p.rank}">
+      <div class="rank-badge">${p.rank}</div>
+      <div class="avatar">${p.name.charAt(0)}</div>
+      <h4 class="h3">${p.name}</h4>
+      <p class="small">${p.points.toLocaleString()} points</p>
+    </div>
+  `).join('');
 
-    podiumFull.innerHTML = top3.map(p => `
-      <div class="podium-card rank-${p.rank}">
-        <div class="rank-badge">${p.rank}</div>
-        <div class="avatar">${p.name.charAt(0)}</div>
-        <h4 class="h3">${p.name}</h4>
-        <p class="small">${p.points_balance.toLocaleString()} points</p>
-      </div>
-    `).join('');
+  document.getElementById('leaderboardList').innerHTML = rest.map(p => `
+    <div class="leaderboard-row">
+      <span class="small">${p.rank}</span>
+      <div class="avatar">${p.name.charAt(0)}</div>
+      <span>${p.name}</span>
+      <span class="lb-points">${p.points.toLocaleString()} pts</span>
+    </div>
+  `).join('');
 
-    leaderboardList.innerHTML = rest.map(p => `
-      <div class="leaderboard-row">
-        <span class="small">${p.rank}</span>
-        <div class="avatar">${p.name.charAt(0)}</div>
-        <span>${p.name}</span>
-        <span class="lb-points">${p.points_balance.toLocaleString()} pts</span>
-      </div>
-    `).join('');
-
-    if(meRes){
-      const me = meRes.user;
-      const myEntry = board.find(p => p.id === me.id);
-      userRow.innerHTML = `
-        <span class="small">${myEntry ? myEntry.rank : '—'}</span>
-        <div class="avatar">${(me.name || me.email).charAt(0).toUpperCase()}</div>
-        <span>${me.name || me.email} (You)</span>
-        <span class="lb-points">${me.points_balance.toLocaleString()} pts</span>
-      `;
-    } else {
-      userRow.innerHTML = `<span class="small" style="grid-column:1/-1">Sign in to see where you rank.</span>`;
-    }
-  }).catch(() => {
-    podiumFull.innerHTML = '<p class="small" style="opacity:0.6">Could not load leaderboard.</p>';
-  });
+  document.getElementById('userRow').innerHTML = `
+    <span class="small">12</span>
+    <div class="avatar">${user.name.charAt(0)}</div>
+    <span>${user.name} (You)</span>
+    <span class="lb-points">${user.points.toLocaleString()} pts</span>
+  `;
 
   const tabs = document.querySelectorAll('.tab-btn');
   tabs.forEach(tab => tab.addEventListener('click', () => {
     tabs.forEach(t => t.setAttribute('aria-selected', 'false'));
     tab.setAttribute('aria-selected', 'true');
+    // Both tabs share the same demo dataset; a live app would refetch per range.
   }));
 });
 

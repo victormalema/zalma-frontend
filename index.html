@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
-<meta name="theme-color" content="#F7F5EF">
+<meta name="theme-color" content="#FDFEFE">
 <meta name="description" content="ZALMA — A New Chapter Begins. Luxury fashion house redefining modern elegance.">
 <title>ZALMA — A New Chapter Begins</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,10 +12,10 @@
 
 <style>
   :root{
-    --ivory:#F7F5EF;
-    --ink:#15140F;
-    --bronze:#9C7A4E;
-    --bronze-soft:#C7A876;
+    --ivory:#FDFEFE;
+    --ink:#201A2B;
+    --bronze:#F042FF;
+    --bronze-soft:#8A5CF6;
     --ease-out-expo:cubic-bezier(0.16, 1, 0.3, 1);
     --ease-smooth:cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -32,6 +32,7 @@
     *,*::before,*::after{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important;scroll-behavior:auto !important;}
     .video-frame{transition:none !important;}
     .scroll-cue .line::after{animation:none !important;}
+    .brand-fly .letter{animation:none !important;opacity:1 !important;transform:none !important;}
   }
 
   .hero-wrapper{position:relative;height:320vh;background:var(--ivory);contain:layout style;}
@@ -49,7 +50,8 @@
   .video-frame video:not([src]) + .video-fallback,.video-frame video[src=""] + .video-fallback{display:block;}
 
   .brand-fly{position:fixed;left:50%;z-index:7;transform:translate(-50%,-50%);font-family:'Fraunces', serif;font-weight:500;font-style:normal;font-optical-sizing:auto;letter-spacing:0.06em;color:var(--ivory);text-transform:uppercase;white-space:nowrap;pointer-events:none;text-shadow:0 2px 40px rgba(0,0,0,0.35);will-change:top,font-size,letter-spacing,color,text-shadow,transform;backface-visibility:hidden;}
-
+  .brand-fly .letter{display:inline-block;opacity:0;transform:translateY(20px);animation:letterIn 0.6s var(--ease-out-expo) forwards;}
+  @keyframes letterIn{to{opacity:1;transform:translateY(0);}}
   .scroll-cue{position:fixed;left:50%;bottom:2.4rem;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:0.5rem;z-index:8;transition:opacity 0.5s var(--ease-smooth);pointer-events:none;}
   .scroll-cue span{font-family:'Inter',sans-serif;font-size:0.6rem;letter-spacing:0.32em;text-transform:uppercase;color:var(--ivory);mix-blend-mode:difference;}
   .scroll-cue .line{width:1px;height:28px;background:var(--ivory);mix-blend-mode:difference;overflow:hidden;position:relative;}
@@ -69,7 +71,7 @@
     letter-spacing:0.25em;
     text-transform:uppercase;
     color:var(--ivory);
-    background:rgba(21,20,15,0.6);
+    background:rgba(32,26,43,0.6);
     backdrop-filter:blur(12px);
     -webkit-backdrop-filter:blur(12px);
     border:1px solid rgba(255,255,255,0.15);
@@ -123,7 +125,7 @@
       <video id="bgVideo" autoplay muted loop playsinline preload="metadata" poster="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1920&q=80">
         <source src="VID-20260501-WA0000.mp4" type="video/mp4">
       </video>
-      <img class="video-fallback" src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1920&q=80" alt="ZALMA campaign">
+      
     </div>
     <h1 class="brand-fly" id="brandFly">Zalma</h1>
   </div>
@@ -150,6 +152,10 @@
   const brandSlot = document.getElementById('brandSlot');
   const frameSlot = document.getElementById('frameSlot');
   const enterBtn  = document.getElementById('enterBtn');
+  // Letter-by-letter reveal, runs once on load
+  brandFly.innerHTML = brandFly.textContent.split('').map((ch, i) =>
+    `<span class="letter" style="animation-delay:${i * 70}ms">${ch}</span>`
+  ).join('');
 
   const FRAME_MAX_RADIUS = 18;
   const VIDEO_MAX_SCALE  = 1.2;
