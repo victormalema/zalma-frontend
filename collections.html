@@ -767,7 +767,7 @@
         const sub = p.price ? `KES ${p.price.toLocaleString()}` : '';
         const collectionName = p.collection_name || p.collection_id || 'Collection';
         return `
-        <a href="product.html?slug=${p.id}" class="grid-item">
+        <a href="product.html?slug=${p.slug}" class="grid-item">
           ${img ? `<img src="${img}" alt="${title}" loading="lazy">` : `<div style="width:100%;height:100%;background:#141216;"></div>`}
           <span class="badge">${label}</span>
           <div class="overlay">
