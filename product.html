@@ -902,7 +902,7 @@
       const wished = Wishlist.has(p.id) ? 'active' : '';
       const img = p.images && p.images[0] ? p.images[0] : 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=600&auto=format&fit=crop';
       return `
-    <a href="product.html?slug=${p.id}" class="product-card">
+    <a href="product.html?slug=${p.slug}" class="product-card">
       <div class="thumb">
         <img src="${img}" alt="${p.name}" loading="lazy">
         ${p.tag ? `<span class="tag">${p.tag}</span>` : ''}
