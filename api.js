@@ -8,7 +8,7 @@
    ========================================================= */
 
 // Change this once you deploy the backend to Render (Step 11):
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = 'https://zalma-backend-1.onrender.com/api';
 
 const ZalmaAPI = {
 
