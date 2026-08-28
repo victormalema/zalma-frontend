@@ -10,7 +10,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
     /* —————————————————————————————————————————————
-       ZALMA — Collections · full-bleed 2x2 grid
+       ZALMA — Collections · full-bleed responsive grid
        ————————————————————————————————————————————— */
     * {
       margin: 0;
@@ -221,15 +221,16 @@
       color: #fff;
     }
 
-    /* ---------- Main Grid: 2x2 full-bleed ---------- */
+    /* ---------- Main Grid: responsive multi-column ---------- */
     .collection-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 1fr 1fr;
-      height: 100vh;
-      width: 100vw;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 2px;
       padding-top: var(--nav-h);
-      padding-bottom: 0;
+      padding-bottom: var(--bottom-nav-h);
+      width: 100%;
+      min-height: 100vh;
+      background: #0b0a0c;
     }
 
     .grid-item {
@@ -238,6 +239,8 @@
       cursor: pointer;
       text-decoration: none;
       color: #fff;
+      aspect-ratio: 1 / 1.2;
+      background: #141216;
     }
     .grid-item img {
       width: 100%;
@@ -252,7 +255,7 @@
     .grid-item .overlay {
       position: absolute;
       inset: 0;
-      background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.5) 100%);
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.6) 100%);
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
@@ -260,7 +263,7 @@
       transition: background 0.3s ease;
     }
     .grid-item:hover .overlay {
-      background: linear-gradient(180deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.6) 100%);
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.05) 0%, rgba(0, 0, 0, 0.7) 100%);
     }
 
     .grid-item .label {
@@ -273,7 +276,7 @@
     .grid-item .title {
       font-family: var(--f-display);
       font-weight: 400;
-      font-size: clamp(22px, 3vw, 34px);
+      font-size: clamp(20px, 2.5vw, 30px);
       line-height: 1.1;
       color: #fff;
     }
@@ -281,23 +284,6 @@
       font-size: 13px;
       color: rgba(255, 255, 255, 0.5);
       margin-top: var(--sp-1);
-    }
-
-    .grid-item .badge {
-      position: absolute;
-      top: var(--sp-4);
-      left: var(--sp-4);
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: rgba(255, 255, 255, 0.3);
-      background: rgba(0, 0, 0, 0.3);
-      backdrop-filter: blur(4px);
-      padding: 4px 14px;
-      border-radius: 50px;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      z-index: 2;
     }
 
     /* ---------- Book a Demo overlay CTA ---------- */
@@ -478,26 +464,22 @@
         display: flex;
       }
       .collection-grid {
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: 1fr 1fr;
-        height: 100vh;
-        width: 100vw;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 2px;
         padding-top: var(--nav-h);
+        padding-bottom: calc(var(--bottom-nav-h) + 16px);
+      }
+      .grid-item {
+        aspect-ratio: 1 / 1.3;
       }
       .grid-item .overlay {
         padding: var(--sp-4) var(--sp-3);
       }
       .grid-item .title {
-        font-size: clamp(16px, 4vw, 22px);
+        font-size: clamp(14px, 3.5vw, 18px);
       }
       .grid-item .sub {
         font-size: 11px;
-      }
-      .grid-item .badge {
-        font-size: 9px;
-        padding: 3px 10px;
-        top: var(--sp-3);
-        left: var(--sp-3);
       }
       .demo-cta {
         bottom: calc(var(--bottom-nav-h) + 16px);
@@ -520,18 +502,13 @@
 
     @media (max-width: 400px) {
       .collection-grid {
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: 1fr 1fr;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
       }
       .grid-item .title {
-        font-size: 14px;
+        font-size: 12px;
       }
       .grid-item .sub {
         font-size: 10px;
-      }
-      .grid-item .badge {
-        font-size: 8px;
-        padding: 2px 8px;
       }
     }
 
@@ -568,7 +545,7 @@
   </script>
   <script>
     /* =========================================================
-       ZALMA — Collections · full-bleed 2x2 grid
+       ZALMA — Collections · responsive grid
        ========================================================= */
 
     // ——————————— Icons ———————————
@@ -582,7 +559,8 @@
       heart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 20.5s-7.6-4.7-9.9-9.4C.6 7.8 2 4.6 5.1 3.8c2-.5 3.9.3 5 2C11.1 4 13 3.3 15 3.8c3.1.8 4.5 4 3 7.3-2.3 4.7-9.9 9.4-9.9 9.4Z"/></svg>`,
       cart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4h2l2.4 12.2A2 2 0 0 0 9.4 18h7.2a2 2 0 0 0 2-1.6L20 8H6"/><circle cx="10" cy="21" r="1.3"/><circle cx="17" cy="21" r="1.3"/></svg>`,
       menu: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`,
-      close: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m6 6 12 12M18 6 6 18"/></svg>`
+      close: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m6 6 12 12M18 6 6 18"/></svg>`,
+      check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 13l4 4L19 7"/></svg>`
     };
 
     const NAV_ITEMS = [
@@ -732,44 +710,25 @@
       // Hide loading state
       if (loading) loading.style.display = 'none';
 
-      // We need exactly 4 items for the 2x2 grid
-      const items = products.slice(0, 4);
-
-      // If fewer than 4 products, show a message
-      if (items.length === 0) {
+      // If no products, show a message
+      if (!products || products.length === 0) {
         grid.innerHTML = `
-          <div style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:14px;letter-spacing:0.1em;text-transform:uppercase;padding-top:var(--nav-h);">
+          <div style="grid-column:1/-1;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.2);font-size:14px;letter-spacing:0.1em;text-transform:uppercase;min-height:60vh;padding-top:var(--nav-h);">
             No collections available
           </div>
         `;
         return;
       }
 
-      // Pad with empty placeholders if less than 4
-      while (items.length < 4) {
-        items.push(null);
-      }
-
-      // Assign IN/OUT labels: first two = IN, last two = OUT
-      const labels = ['IN', 'IN', 'OUT', 'OUT'];
-
-      grid.innerHTML = items.map((p, i) => {
-        if (!p) {
-          return `
-            <div class="grid-item" style="background:#0b0a0c;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.1);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;">
-              <span>Empty</span>
-            </div>
-          `;
-        }
+      // Render ALL products in a responsive grid
+      grid.innerHTML = products.map((p) => {
         const img = p.images && p.images[0] ? p.images[0] : '';
-        const label = labels[i] || '';
         const title = p.name || 'Untitled';
         const sub = p.price ? `KES ${p.price.toLocaleString()}` : '';
         const collectionName = p.collection_name || p.collection_id || 'Collection';
         return `
         <a href="product.html?slug=${p.slug}" class="grid-item">
-          ${img ? `<img src="${img}" alt="${title}" loading="lazy">` : `<div style="width:100%;height:100%;background:#141216;"></div>`}
-          <span class="badge">${label}</span>
+          ${img ? `<img src="${img}" alt="${title}" loading="lazy">` : `<div style="width:100%;height:100%;background:#141216;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.1);font-size:12px;">No image</div>`}
           <div class="overlay">
             <div class="label">${collectionName}</div>
             <div class="title">${title}</div>
@@ -786,7 +745,7 @@
       renderBottomNav(current);
       updateNavBadges();
 
-      // Load products from API only
+      // Load products from API
       if (typeof ZalmaAPI !== 'undefined' && ZalmaAPI.getProducts) {
         ZalmaAPI.getProducts()
           .then(res => {
