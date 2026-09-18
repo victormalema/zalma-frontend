@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZALMA — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0b0a0c;
+    --panel: #16141a;
+    --line: rgba(255,255,255,0.1);
+    --ink: #f5f4f7;
+    --ink-soft: rgba(245,244,247,0.6);
+    --accent: #F042FF;
+    --accent-soft: rgba(240,66,255,0.15);
+    --danger: #ff5c5c;
+    --success: #3ecf8e;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    line-height:1.6;
+    padding-bottom:60px;
+  }
+  header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:20px 24px;
+    border-bottom:1px solid var(--line);
+  }
+  header .brand{
+    font-family:'Fraunces',serif;
+    font-size:20px;
+    letter-spacing:0.04em;
+  }
+  header .brand span{ color:var(--accent); }
+  header a.back{
+    color:var(--ink-soft);
+    text-decoration:none;
+    font-size:14px;
+  }
+  header a.back:hover{ color:var(--ink); }
+  main{ max-width:760px; margin:0 auto; padding:32px 20px; }
+  .gate{ text-align:center; padding:80px 20px; color:var(--ink-soft); }
+  h1{ font-family:'Fraunces',serif; font-weight:500; font-size:26px; margin:0 0 6px; }
+  .section-sub{ color:var(--ink-soft); font-size:14px; margin-bottom:24px; }
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:20px;
+    margin-bottom:14px;
+  }
+  .card .meta{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin-bottom:10px;
+    font-size:13px;
+    color:var(--ink-soft);
+  }
+  .card .meta strong{ color:var(--ink); font-weight:600; }
+  .card .content{ font-size:15px; margin-bottom:16px; }
+  .card .actions{ display:flex; gap:10px; }
+  button{
+    font-family:inherit;
+    font-size:13px;
+    font-weight:600;
+    padding:9px 18px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--ink);
+    cursor:pointer;
+    transition:opacity 0.15s ease;
+  }
+  button:hover{ opacity:0.85; }
+  button:disabled{ opacity:0.4; cursor:default; }
+  .btn-approve{ background:var(--success); border-color:var(--success); color:#0b0a0c; }
+  .btn-reject{ background:transparent; border-color:var(--danger); color:var(--danger); }
+  .empty{
+    text-align:center;
+    padding:48px 20px;
+    color:var(--ink-soft);
+    border:1px dashed var(--line);
+    border-radius:12px;
+    font-size:14px;
+  }
+  .toast{
+    position:fixed;
+    bottom:24px;
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:var(--panel);
+    border:1px solid var(--line);
+    padding:12px 20px;
+    border-radius:8px;
+    font-size:14px;
+    opacity:0;
+    pointer-events:none;
+    transition:all 0.3s ease;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">ZALMA <span>Admin</span></div>
+  <a href="home.html" class="back">← Back to site</a>
+</header>
+
+<main id="mainContent">
+  <div class="gate">Checking access…</div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="api.js"></script>
+<script>
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  function testimonialCardHTML(t){
+    const date = new Date(t.created_at).toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
+    return `
+    <div class="card" data-id="${t.id}">
+      <div class="meta"><strong>${t.author_name || 'Unknown'}</strong><span>${date}</span></div>
+      <div class="content">"${t.content}"</div>
+      <div class="actions">
+        <button class="btn-approve" data-action="approve" data-id="${t.id}">Approve</button>
+        <button class="btn-reject" data-action="reject" data-id="${t.id}">Reject</button>
+      </div>
+    </div>`;
+  }
+
+  function wireActions(container){
+    container.querySelectorAll('[data-action]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.getAttribute('data-id');
+        const approve = btn.getAttribute('data-action') === 'approve';
+        const card = container.querySelector(`.card[data-id="${id}"]`);
+        card.querySelectorAll('button').forEach(b => b.disabled = true);
+
+        ZalmaAPI.moderateTestimonial(id, approve).then(() => {
+          showToast(approve ? 'Testimonial approved' : 'Testimonial rejected');
+          card.remove();
+          if(!container.querySelector('.card')){
+            container.innerHTML = '<div class="empty">No pending testimonials.</div>';
+          }
+        }).catch(err => {
+          showToast(err.message || 'Could not update testimonial');
+          card.querySelectorAll('button').forEach(b => b.disabled = false);
+        });
+      });
+    });
+  }
+
+  function renderAdminPanel(){
+    const main = document.getElementById('mainContent');
+    main.innerHTML = `
+      <h1>Testimonials</h1>
+      <p class="section-sub">Review submissions before they appear on the public Wall of Honor.</p>
+      <div id="testimonialList"><p style="opacity:0.6">Loading…</p></div>
+    `;
+
+    const list = document.getElementById('testimonialList');
+    ZalmaAPI.getPendingTestimonials().then(res => {
+      const items = res.testimonials || [];
+      if(items.length === 0){
+        list.innerHTML = '<div class="empty">No pending testimonials.</div>';
+        return;
+      }
+      list.innerHTML = items.map(testimonialCardHTML).join('');
+      wireActions(list);
+    }).catch(() => {
+      list.innerHTML = '<div class="empty">Could not load testimonials. Try refreshing.</div>';
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const main = document.getElementById('mainContent');
+
+    if(!ZalmaAPI.isLoggedIn()){
+      window.location.href = 'home.html';
+      return;
+    }
+
+    ZalmaAPI.me().then(res => {
+      if(!res.user || !res.user.is_admin){
+        window.location.href = 'home.html';
+        return;
+      }
+      renderAdminPanel();
+    }).catch(() => {
+      window.location.href = 'home.html';
+    });
+  });
+</script>
+
+</body>
+</html>

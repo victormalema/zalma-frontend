@@ -81,6 +81,8 @@ const ZalmaAPI = {
   // ---------- wall of honor ----------
   getLeaderboard(){ return this._request('/wall/leaderboard'); },
   getTestimonials(){ return this._request('/wall/testimonials'); },
-  submitTestimonial(content, image){ return this._request('/wall/testimonials', { method: 'POST', body: JSON.stringify({ content, image }) }); }
+  submitTestimonial(content, image){ return this._request('/wall/testimonials', { method: 'POST', body: JSON.stringify({ content, image }) }); },
+  getPendingTestimonials(){ return this._request('/wall/admin/testimonials/pending'); },
+  moderateTestimonial(id, approve){ return this._request('/wall/admin/testimonials/' + id, { method: 'PATCH', body: JSON.stringify({ approve }) }); },
 };
 
