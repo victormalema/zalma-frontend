@@ -11,13 +11,14 @@
   :root{
     --bg: #0b0a0c;
     --panel: #16141a;
+    --panel-2: #1c1a21;
     --line: rgba(255,255,255,0.1);
     --ink: #f5f4f7;
     --ink-soft: rgba(245,244,247,0.6);
     --accent: #F042FF;
-    --accent-soft: rgba(240,66,255,0.15);
     --danger: #ff5c5c;
     --success: #3ecf8e;
+    --warn: #f5b942;
   }
   *{box-sizing:border-box;}
   body{
@@ -26,88 +27,125 @@
     color:var(--ink);
     font-family:'Inter',sans-serif;
     line-height:1.6;
-    padding-bottom:60px;
   }
   header{
     display:flex;
     align-items:center;
     justify-content:space-between;
-    padding:20px 24px;
+    padding:18px 24px;
     border-bottom:1px solid var(--line);
+    position:sticky;
+    top:0;
+    background:var(--bg);
+    z-index:10;
   }
-  header .brand{
-    font-family:'Fraunces',serif;
-    font-size:20px;
-    letter-spacing:0.04em;
-  }
+  header .brand{ font-family:'Fraunces',serif; font-size:20px; letter-spacing:0.04em; }
   header .brand span{ color:var(--accent); }
-  header a.back{
-    color:var(--ink-soft);
-    text-decoration:none;
-    font-size:14px;
-  }
+  header a.back{ color:var(--ink-soft); text-decoration:none; font-size:14px; }
   header a.back:hover{ color:var(--ink); }
-  main{ max-width:760px; margin:0 auto; padding:32px 20px; }
-  .gate{ text-align:center; padding:80px 20px; color:var(--ink-soft); }
-  h1{ font-family:'Fraunces',serif; font-weight:500; font-size:26px; margin:0 0 6px; }
-  .section-sub{ color:var(--ink-soft); font-size:14px; margin-bottom:24px; }
-  .card{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:20px;
-    margin-bottom:14px;
-  }
-  .card .meta{
+
+  nav.tabs{
     display:flex;
-    justify-content:space-between;
-    align-items:baseline;
-    margin-bottom:10px;
-    font-size:13px;
-    color:var(--ink-soft);
+    gap:4px;
+    padding:0 24px;
+    border-bottom:1px solid var(--line);
+    overflow-x:auto;
   }
+  nav.tabs button{
+    font-family:inherit;
+    font-size:14px;
+    font-weight:500;
+    padding:14px 16px;
+    background:none;
+    border:none;
+    border-bottom:2px solid transparent;
+    color:var(--ink-soft);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  nav.tabs button.active{ color:var(--ink); border-bottom-color:var(--accent); }
+  nav.tabs button .badge{
+    display:inline-block;
+    background:var(--accent);
+    color:#fff;
+    font-size:11px;
+    font-weight:600;
+    padding:1px 6px;
+    border-radius:10px;
+    margin-left:6px;
+  }
+
+  main{ max-width:1000px; margin:0 auto; padding:28px 20px 60px; }
+  .gate{ text-align:center; padding:80px 20px; color:var(--ink-soft); }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  h1{ font-family:'Fraunces',serif; font-weight:500; font-size:24px; margin:0 0 4px; }
+  .section-sub{ color:var(--ink-soft); font-size:14px; margin-bottom:22px; }
+
+  .stat-grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:12px; margin-bottom:28px; }
+  .stat-card{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:16px; }
+  .stat-card .label{ font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:6px; }
+  .stat-card .value{ font-size:24px; font-weight:600; }
+  .stat-card .value.accent{ color:var(--accent); }
+
+  table{ width:100%; border-collapse:collapse; font-size:14px; }
+  th{ text-align:left; padding:10px 12px; color:var(--ink-soft); font-weight:500; font-size:12px; text-transform:uppercase; letter-spacing:0.03em; border-bottom:1px solid var(--line); }
+  td{ padding:12px; border-bottom:1px solid var(--line); vertical-align:top; }
+  tr:last-child td{ border-bottom:none; }
+  .mono{ font-family:monospace; font-size:12px; color:var(--ink-soft); }
+
+  select.status-select{
+    font-family:inherit;
+    font-size:13px;
+    background:var(--panel-2);
+    color:var(--ink);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:6px 8px;
+  }
+  .pill{ display:inline-block; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+  .pill.pending{ background:rgba(245,185,66,0.15); color:var(--warn); }
+  .pill.paid, .pill.processing{ background:rgba(64,150,255,0.15); color:#5aa9ff; }
+  .pill.shipped{ background:rgba(140,100,255,0.15); color:#a98bff; }
+  .pill.delivered{ background:rgba(62,207,142,0.15); color:var(--success); }
+  .pill.cancelled{ background:rgba(255,92,92,0.15); color:var(--danger); }
+  .admin-tag{ font-size:11px; background:var(--accent); color:#fff; padding:2px 7px; border-radius:8px; margin-left:6px; }
+
+  .card{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:20px; margin-bottom:14px; }
+  .card .meta{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px; font-size:13px; color:var(--ink-soft); }
   .card .meta strong{ color:var(--ink); font-weight:600; }
   .card .content{ font-size:15px; margin-bottom:16px; }
   .card .actions{ display:flex; gap:10px; }
-  button{
-    font-family:inherit;
-    font-size:13px;
-    font-weight:600;
-    padding:9px 18px;
-    border-radius:8px;
-    border:1px solid var(--line);
-    background:transparent;
-    color:var(--ink);
-    cursor:pointer;
+
+  button{ font-family:inherit; }
+  .btn{
+    font-size:13px; font-weight:600; padding:9px 18px; border-radius:8px;
+    border:1px solid var(--line); background:transparent; color:var(--ink); cursor:pointer;
     transition:opacity 0.15s ease;
   }
-  button:hover{ opacity:0.85; }
-  button:disabled{ opacity:0.4; cursor:default; }
+  .btn:hover{ opacity:0.85; }
+  .btn:disabled{ opacity:0.4; cursor:default; }
   .btn-approve{ background:var(--success); border-color:var(--success); color:#0b0a0c; }
   .btn-reject{ background:transparent; border-color:var(--danger); color:var(--danger); }
-  .empty{
-    text-align:center;
-    padding:48px 20px;
-    color:var(--ink-soft);
-    border:1px dashed var(--line);
-    border-radius:12px;
-    font-size:14px;
-  }
+
+  .empty{ text-align:center; padding:48px 20px; color:var(--ink-soft); border:1px dashed var(--line); border-radius:12px; font-size:14px; }
+  .loading{ opacity:0.6; padding:24px 0; text-align:center; }
+
   .toast{
-    position:fixed;
-    bottom:24px;
-    left:50%;
-    transform:translateX(-50%) translateY(20px);
-    background:var(--panel);
-    border:1px solid var(--line);
-    padding:12px 20px;
-    border-radius:8px;
-    font-size:14px;
-    opacity:0;
-    pointer-events:none;
-    transition:all 0.3s ease;
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--panel); border:1px solid var(--line); padding:12px 20px; border-radius:8px;
+    font-size:14px; opacity:0; pointer-events:none; transition:all 0.3s ease; z-index:100;
   }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+  @media (max-width:640px){
+    table, thead, tbody, th, td, tr{ display:block; }
+    thead{ display:none; }
+    tr{ border-bottom:1px solid var(--line); padding:12px 0; }
+    td{ border:none; padding:4px 0; }
+    td::before{ content:attr(data-label); display:block; font-size:11px; color:var(--ink-soft); text-transform:uppercase; margin-bottom:2px; }
+  }
 </style>
 </head>
 <body>
@@ -116,6 +154,13 @@
   <div class="brand">ZALMA <span>Admin</span></div>
   <a href="home.html" class="back">← Back to site</a>
 </header>
+
+<nav class="tabs" id="tabs" style="display:none">
+  <button data-tab="dashboard" class="active">Dashboard</button>
+  <button data-tab="orders">Orders</button>
+  <button data-tab="users">Users</button>
+  <button data-tab="testimonials">Testimonials <span class="badge" id="testimonialBadge" style="display:none"></span></button>
+</nav>
 
 <main id="mainContent">
   <div class="gate">Checking access…</div>
@@ -132,71 +177,232 @@
     setTimeout(() => t.classList.remove('show'), 2200);
   }
 
+  function fmtDate(iso){
+    return new Date(iso).toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
+  }
+  function fmtKES(n){
+    return 'KES ' + Number(n).toLocaleString();
+  }
+  function capitalize(s){
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  const STATUSES = ['pending','paid','processing','shipped','delivered','cancelled'];
+
+  function loadDashboard(){
+    const el = document.getElementById('panel-dashboard');
+    el.innerHTML = '<div class="loading">Loading dashboard…</div>';
+    ZalmaAPI.getAdminDashboard().then(stats => {
+      const statusRows = Object.entries(stats.orders_by_status || {})
+        .map(([status, count]) => `<span class="pill ${status}" style="margin-right:8px">${capitalize(status)}: ${count}</span>`)
+        .join('');
+      el.innerHTML = `
+        <h1>Dashboard</h1>
+        <p class="section-sub">Overview of ZALMA right now.</p>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="label">Total Revenue</div><div class="value accent">${fmtKES(stats.total_revenue)}</div></div>
+          <div class="stat-card"><div class="label">Total Orders</div><div class="value">${stats.total_orders}</div></div>
+          <div class="stat-card"><div class="label">Orders This Week</div><div class="value">${stats.orders_this_week}</div></div>
+          <div class="stat-card"><div class="label">Total Users</div><div class="value">${stats.total_users}</div></div>
+          <div class="stat-card"><div class="label">Signups This Week</div><div class="value">${stats.signups_this_week}</div></div>
+          <div class="stat-card"><div class="label">Points Issued</div><div class="value">${stats.points_issued.toLocaleString()}</div></div>
+          <div class="stat-card"><div class="label">Points Redeemed</div><div class="value">${stats.points_redeemed.toLocaleString()}</div></div>
+          <div class="stat-card"><div class="label">Pending Testimonials</div><div class="value">${stats.pending_testimonials_count}</div></div>
+          <div class="stat-card"><div class="label">Pending Unboxing</div><div class="value">${stats.pending_unboxing_count}</div></div>
+        </div>
+        <div class="stat-card" style="grid-column:1/-1">
+          <div class="label">Orders by Status</div>
+          <div style="margin-top:8px">${statusRows || '<span class="section-sub">No orders yet.</span>'}</div>
+        </div>
+      `;
+      updateTestimonialBadge(stats.pending_testimonials_count);
+    }).catch(() => {
+      el.innerHTML = '<div class="empty">Could not load dashboard data.</div>';
+    });
+  }
+
+  function orderRowHTML(o){
+    return `
+    <tr data-id="${o.id}">
+      <td data-label="Customer">${o.customer_name || o.customer_email || 'Unknown'}<br><span class="mono">${o.customer_email || ''}</span></td>
+      <td data-label="Date">${fmtDate(o.created_at)}</td>
+      <td data-label="Total">${fmtKES(o.total)}</td>
+      <td data-label="Points">${o.points_earned}</td>
+      <td data-label="Status">
+        <select class="status-select" data-order-id="${o.id}">
+          ${STATUSES.map(s => `<option value="${s}" ${s === o.status ? 'selected' : ''}>${capitalize(s)}</option>`).join('')}
+        </select>
+      </td>
+    </tr>`;
+  }
+
+  function loadOrders(){
+    const el = document.getElementById('panel-orders');
+    el.innerHTML = '<div class="loading">Loading orders…</div>';
+    ZalmaAPI.getAdminOrders().then(res => {
+      const orders = res.orders || [];
+      if(orders.length === 0){
+        el.innerHTML = '<h1>Orders</h1><div class="empty">No orders yet.</div>';
+        return;
+      }
+      el.innerHTML = `
+        <h1>Orders</h1>
+        <p class="section-sub">${orders.length} order${orders.length === 1 ? '' : 's'} total.</p>
+        <table>
+          <thead><tr><th>Customer</th><th>Date</th><th>Total</th><th>Points</th><th>Status</th></tr></thead>
+          <tbody>${orders.map(orderRowHTML).join('')}</tbody>
+        </table>
+      `;
+      el.querySelectorAll('.status-select').forEach(sel => {
+        sel.addEventListener('change', () => {
+          const orderId = sel.getAttribute('data-order-id');
+          const newStatus = sel.value;
+          sel.disabled = true;
+          ZalmaAPI.updateOrderStatus(orderId, newStatus).then(() => {
+            showToast('Order status updated');
+          }).catch(err => {
+            showToast(err.message || 'Could not update order');
+          }).finally(() => { sel.disabled = false; });
+        });
+      });
+    }).catch(() => {
+      el.innerHTML = '<h1>Orders</h1><div class="empty">Could not load orders.</div>';
+    });
+  }
+
+  function userRowHTML(u){
+    return `
+    <tr>
+      <td data-label="Name">${u.name || '—'}${u.is_admin ? '<span class="admin-tag">ADMIN</span>' : ''}</td>
+      <td data-label="Email">${u.email}</td>
+      <td data-label="Points">${u.points_balance.toLocaleString()}</td>
+      <td data-label="Lifetime XP">${u.lifetime_xp.toLocaleString()}</td>
+      <td data-label="Referral Code" class="mono">${u.referral_code}</td>
+      <td data-label="Joined">${fmtDate(u.created_at)}</td>
+    </tr>`;
+  }
+
+  function loadUsers(){
+    const el = document.getElementById('panel-users');
+    el.innerHTML = '<div class="loading">Loading users…</div>';
+    ZalmaAPI.getAdminUsers().then(res => {
+      const users = res.users || [];
+      if(users.length === 0){
+        el.innerHTML = '<h1>Users</h1><div class="empty">No users yet.</div>';
+        return;
+      }
+      el.innerHTML = `
+        <h1>Users</h1>
+        <p class="section-sub">${users.length} registered user${users.length === 1 ? '' : 's'}.</p>
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Points</th><th>Lifetime XP</th><th>Referral Code</th><th>Joined</th></tr></thead>
+          <tbody>${users.map(userRowHTML).join('')}</tbody>
+        </table>
+      `;
+    }).catch(() => {
+      el.innerHTML = '<h1>Users</h1><div class="empty">Could not load users.</div>';
+    });
+  }
+
   function testimonialCardHTML(t){
-    const date = new Date(t.created_at).toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
     return `
     <div class="card" data-id="${t.id}">
-      <div class="meta"><strong>${t.author_name || 'Unknown'}</strong><span>${date}</span></div>
+      <div class="meta"><strong>${t.author_name || 'Unknown'}</strong><span>${fmtDate(t.created_at)}</span></div>
       <div class="content">"${t.content}"</div>
       <div class="actions">
-        <button class="btn-approve" data-action="approve" data-id="${t.id}">Approve</button>
-        <button class="btn-reject" data-action="reject" data-id="${t.id}">Reject</button>
+        <button class="btn btn-approve" data-action="approve" data-id="${t.id}">Approve</button>
+        <button class="btn btn-reject" data-action="reject" data-id="${t.id}">Reject</button>
       </div>
     </div>`;
   }
 
-  function wireActions(container){
-    container.querySelectorAll('[data-action]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.getAttribute('data-id');
-        const approve = btn.getAttribute('data-action') === 'approve';
-        const card = container.querySelector(`.card[data-id="${id}"]`);
-        card.querySelectorAll('button').forEach(b => b.disabled = true);
+  function updateTestimonialBadge(count){
+    const badge = document.getElementById('testimonialBadge');
+    if(count > 0){
+      badge.textContent = count;
+      badge.style.display = 'inline-block';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
 
-        ZalmaAPI.moderateTestimonial(id, approve).then(() => {
-          showToast(approve ? 'Testimonial approved' : 'Testimonial rejected');
-          card.remove();
-          if(!container.querySelector('.card')){
-            container.innerHTML = '<div class="empty">No pending testimonials.</div>';
-          }
-        }).catch(err => {
-          showToast(err.message || 'Could not update testimonial');
-          card.querySelectorAll('button').forEach(b => b.disabled = false);
+  function loadTestimonials(){
+    const el = document.getElementById('panel-testimonials');
+    el.innerHTML = '<div class="loading">Loading testimonials…</div>';
+    ZalmaAPI.getPendingTestimonials().then(res => {
+      const items = res.testimonials || [];
+      updateTestimonialBadge(items.length);
+      if(items.length === 0){
+        el.innerHTML = '<h1>Testimonials</h1><p class="section-sub">Review submissions before they appear on the public Wall of Honor.</p><div class="empty">No pending testimonials.</div>';
+        return;
+      }
+      el.innerHTML = `
+        <h1>Testimonials</h1>
+        <p class="section-sub">Review submissions before they appear on the public Wall of Honor.</p>
+        <div id="testimonialList">${items.map(testimonialCardHTML).join('')}</div>
+      `;
+      el.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-id');
+          const approve = btn.getAttribute('data-action') === 'approve';
+          const card = el.querySelector(`.card[data-id="${id}"]`);
+          card.querySelectorAll('button').forEach(b => b.disabled = true);
+
+          ZalmaAPI.moderateTestimonial(id, approve).then(() => {
+            showToast(approve ? 'Testimonial approved' : 'Testimonial rejected');
+            card.remove();
+            const remaining = el.querySelectorAll('.card').length;
+            updateTestimonialBadge(remaining);
+            if(remaining === 0){
+              document.getElementById('testimonialList').innerHTML = '<div class="empty">No pending testimonials.</div>';
+            }
+          }).catch(err => {
+            showToast(err.message || 'Could not update testimonial');
+            card.querySelectorAll('button').forEach(b => b.disabled = false);
+          });
         });
       });
+    }).catch(() => {
+      el.innerHTML = '<h1>Testimonials</h1><div class="empty">Could not load testimonials.</div>';
     });
+  }
+
+  const loaders = {
+    dashboard: loadDashboard,
+    orders: loadOrders,
+    users: loadUsers,
+    testimonials: loadTestimonials,
+  };
+  const loadedTabs = new Set();
+
+  function switchTab(tabName){
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b.getAttribute('data-tab') === tabName));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tabName));
+    if(!loadedTabs.has(tabName)){
+      loadedTabs.add(tabName);
+      loaders[tabName]();
+    }
   }
 
   function renderAdminPanel(){
-    const main = document.getElementById('mainContent');
-    main.innerHTML = `
-      <h1>Testimonials</h1>
-      <p class="section-sub">Review submissions before they appear on the public Wall of Honor.</p>
-      <div id="testimonialList"><p style="opacity:0.6">Loading…</p></div>
+    document.getElementById('tabs').style.display = 'flex';
+    document.getElementById('mainContent').innerHTML = `
+      <div class="tab-panel active" id="panel-dashboard"></div>
+      <div class="tab-panel" id="panel-orders"></div>
+      <div class="tab-panel" id="panel-users"></div>
+      <div class="tab-panel" id="panel-testimonials"></div>
     `;
-
-    const list = document.getElementById('testimonialList');
-    ZalmaAPI.getPendingTestimonials().then(res => {
-      const items = res.testimonials || [];
-      if(items.length === 0){
-        list.innerHTML = '<div class="empty">No pending testimonials.</div>';
-        return;
-      }
-      list.innerHTML = items.map(testimonialCardHTML).join('');
-      wireActions(list);
-    }).catch(() => {
-      list.innerHTML = '<div class="empty">Could not load testimonials. Try refreshing.</div>';
+    document.querySelectorAll('nav.tabs button').forEach(btn => {
+      btn.addEventListener('click', () => switchTab(btn.getAttribute('data-tab')));
     });
+    switchTab('dashboard');
   }
 
   document.addEventListener('DOMContentLoaded', () => {
-    const main = document.getElementById('mainContent');
-
     if(!ZalmaAPI.isLoggedIn()){
       window.location.href = 'home.html';
       return;
     }
-
     ZalmaAPI.me().then(res => {
       if(!res.user || !res.user.is_admin){
         window.location.href = 'home.html';

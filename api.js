@@ -1,6 +1,6 @@
 /* =========================================================
    ZALMA API client
-   Wraps every backend call in one place so pages don't need
+   Wraps every backend call in one place so pages don't needm
    raw fetch() code scattered everywhere.
 
    Include this BEFORE each page's own <script> block:
@@ -83,6 +83,11 @@ const ZalmaAPI = {
   getTestimonials(){ return this._request('/wall/testimonials'); },
   submitTestimonial(content, image){ return this._request('/wall/testimonials', { method: 'POST', body: JSON.stringify({ content, image }) }); },
   getPendingTestimonials(){ return this._request('/wall/admin/testimonials/pending'); },
+getAdminDashboard(){ return this._request('/admin/dashboard'); },
+getAdminUsers(){ return this._request('/admin/users'); },
+getAdminOrders(){ return this._request('/admin/orders'); },
+updateOrderStatus(orderId, status){ return this._request('/admin/orders/' + orderId, { method: 'PATCH', body: JSON.stringify({ status }) }); },
   moderateTestimonial(id, approve){ return this._request('/wall/admin/testimonials/' + id, { method: 'PATCH', body: JSON.stringify({ approve }) }); },
 };
 
+ 
