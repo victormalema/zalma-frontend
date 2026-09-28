@@ -1362,14 +1362,14 @@
       renderGoogleButton();
     }
 
-    const GOOGLE_CLIENT_ID = 'YOUR_CLIENT_ID.apps.googleusercontent.com';
+    const GOOGLE_CLIENT_ID = '645289055152-jaqmdu0on7cc94vllo970lplb3p4c0rb.apps.googleusercontent.com';
 
     function renderGoogleButton() {
       const target = document.getElementById('googleBtn');
       if (!target || typeof google === 'undefined') return;
 
       google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
+        client_id: 645289055152-jaqmdu0on7cc94vllo970lplb3p4c0rb.apps.googleusercontent.com,
         callback: async (response) => {
           try {
             const ref = new URLSearchParams(location.search).get('ref');
