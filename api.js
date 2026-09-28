@@ -36,6 +36,12 @@ const ZalmaAPI = {
   // ---------- auth ----------
   signup(payload){ return this._request('/auth/signup', { method: 'POST', body: JSON.stringify(payload) }); },
   login(payload){ return this._request('/auth/login', { method: 'POST', body: JSON.stringify(payload) }); },
+  googleLogin(credential, referralCode){
+  return this._request('/auth/google', {
+    method: 'POST',
+    body: JSON.stringify({ credential, referral_code: referralCode || null })
+  });
+},
   me(){ return this._request('/auth/me'); },
 
   // ---------- products & collections ----------
