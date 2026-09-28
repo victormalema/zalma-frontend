@@ -1405,10 +1405,6 @@ function initUnboxingModal(){
 
   const setMsg = (text, ok) => { msg.textContent = text || ''; msg.classList.toggle('ok', !!ok); };
   const open = () => {
-    if(!(window.ZalmaAPI && ZalmaAPI.isLoggedIn && ZalmaAPI.isLoggedIn())){
-      showToast('Please log in to submit your unboxing', 'profile');
-      return;
-    }
     setMsg('');
     input.value = '';
     overlay.classList.add('open');
@@ -1435,7 +1431,7 @@ function initUnboxingModal(){
     let valid = false;
     try{ const u = new URL(url); valid = (u.protocol === 'http:' || u.protocol === 'https:'); }catch(e){}
     if(!valid){ setMsg('Please paste a valid video link (starting with https://).'); return; }
-    if(typeof ZalmaAPI.submitUnboxing !== 'function'){
+    if(typeof ZalmaAPI === 'undefined' || typeof ZalmaAPI.submitUnboxing !== 'function'){
       setMsg('Unboxing submission is not connected in api.js yet.');
       return;
     }
@@ -1447,7 +1443,12 @@ function initUnboxingModal(){
       close();
       showToast((res && res.message) || 'Submitted! Pending review.', 'bookmark');
     }catch(err){
-      setMsg((err && err.message) || 'Could not submit right now. Please try again.');
+      const m = (err && err.message) || '';
+      if(/401|unauthori[sz]ed|token|not logged|log ?in|expired/i.test(m)){
+        setMsg('Please log in again to submit your unboxing.');
+      }else{
+        setMsg(m || 'Could not submit right now. Please try again.');
+      }
     }finally{
       submitBtn.disabled = false;
     }
