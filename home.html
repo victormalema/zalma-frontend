@@ -446,7 +446,7 @@
     }
 
     .reward-tiles {
-      display: grid; grid-template-columns: repeat(4, 1fr);
+      display: grid; grid-template-columns: repeat(3, 1fr);
       gap: var(--sp-3); margin-top: var(--sp-5);
     }
     .reward-tile {
@@ -471,6 +471,40 @@
       font-size: 10px; color: rgba(255,255,255,0.35); margin-top: 2px;
     }
 
+    .reward-tile-action { cursor: pointer; }
+    .reward-tile-action:focus-visible { outline: 1px solid var(--c-silver); outline-offset: 2px; }
+
+    /* Unboxing submit modal */
+    .ubx-overlay {
+      position: fixed; inset: 0; z-index: 1100; display: none;
+      align-items: center; justify-content: center; padding: var(--sp-4);
+      background: var(--c-overlay); backdrop-filter: blur(6px);
+    }
+    .ubx-overlay.open { display: flex; }
+    .ubx-dialog {
+      width: 100%; max-width: 440px; background: var(--c-card);
+      border: 1px solid rgba(255,255,255,0.08); padding: var(--sp-6) var(--sp-5);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6); position: relative;
+    }
+    .ubx-dialog h3 { font-family: var(--f-display); font-size: 22px; color: #fff; margin: 0 0 6px; }
+    .ubx-dialog p.ubx-sub { font-size: 13px; color: var(--c-ink-soft); margin: 0 0 var(--sp-4); line-height: 1.5; }
+    .ubx-dialog label { display: block; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--c-ink-faint); margin-bottom: 8px; }
+    .ubx-dialog input[type="url"] {
+      width: 100%; box-sizing: border-box; padding: 13px 14px; font-size: 14px;
+      background: rgba(255,255,255,0.04); color: #fff;
+      border: 1px solid rgba(255,255,255,0.12); outline: none; font-family: inherit;
+    }
+    .ubx-dialog input[type="url"]:focus { border-color: var(--c-silver); }
+    .ubx-msg { min-height: 18px; font-size: 12px; margin-top: 8px; color: #ff8b8b; }
+    .ubx-msg.ok { color: #9be3b0; }
+    .ubx-actions { display: flex; gap: var(--sp-3); margin-top: var(--sp-4); }
+    .ubx-actions .btn { flex: 1; justify-content: center; }
+    .ubx-close {
+      position: absolute; top: 10px; right: 12px; background: none; border: 0;
+      color: var(--c-ink-soft); font-size: 22px; line-height: 1; cursor: pointer;
+    }
+    .ubx-close:hover { color: #fff; }
+
     .social-section {
       margin-top: var(--sp-6); padding-top: var(--sp-5);
       border-top: 1px solid rgba(255,255,255,0.06);
@@ -486,6 +520,8 @@
       padding: 8px 16px; border: 1px solid rgba(255,255,255,0.06);
       transition: all 0.3s ease;
     }
+    .social-section .social-link .social-icon { display: inline-flex; }
+    .social-section .social-link .social-icon svg { width: 16px; height: 16px; }
     .social-section .social-link:hover {
       background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.15); color: #fff;
     }
@@ -664,6 +700,7 @@
       .footer-logo-col { grid-column: 1/-1; }
       .product-grid .product-card { width: 190px; }
       .reward-tiles { grid-template-columns: repeat(2, 1fr); }
+      .reward-tiles .reward-tile:last-child { grid-column: 1 / -1; }
       .rewards-panel .panel-header { flex-direction: column; align-items: flex-start; }
       .rewards-panel .panel-header .points-display { text-align: left; }
       .social-section { flex-direction: column; align-items: stretch; gap: var(--sp-2); }
@@ -779,18 +816,12 @@
           <div class="tile-points">Per product</div>
         </div>
         <div class="reward-tile">
-          <span class="tile-icon">&#x1F4F1;</span>
-          <div class="tile-label">Scan QR</div>
-          <div class="tile-value">Check In</div>
-          <div class="tile-points">Earn 50 pts</div>
-        </div>
-        <div class="reward-tile">
           <span class="tile-icon">&#x1F465;</span>
           <div class="tile-label">Refer</div>
           <div class="tile-value">+100 pts</div>
           <div class="tile-points">Per friend</div>
         </div>
-        <div class="reward-tile">
+        <div class="reward-tile reward-tile-action" id="unboxingTile" role="button" tabindex="0" aria-haspopup="dialog">
           <span class="tile-icon">&#x1F4E6;</span>
           <div class="tile-label">Unboxing</div>
           <div class="tile-value">Share</div>
@@ -800,18 +831,18 @@
 
       <div class="social-section">
         <span class="social-label">Follow &amp; Earn</span>
-        <a href="#" class="social-link" target="_blank" rel="noopener">
-          <span class="social-icon">&#x1F4F8;</span>
+        <a href="#" class="social-link" target="_blank" rel="noopener" aria-label="Instagram">
+          <span class="social-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></span>
           <span class="social-handle">@zalma</span>
           <span class="social-badge">+25 pts</span>
         </a>
-        <a href="#" class="social-link" target="_blank" rel="noopener">
-          <span class="social-icon">&#x1F3B5;</span>
+        <a href="#" class="social-link" target="_blank" rel="noopener" aria-label="TikTok">
+          <span class="social-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5 2.59 2.59 0 0 1-2.59-2.59 2.59 2.59 0 0 1 2.59-2.59c.27 0 .53.04.77.12V9.66a5.7 5.7 0 0 0-.77-.05A5.68 5.68 0 0 0 4.18 15.3a5.68 5.68 0 0 0 5.68 5.68 5.68 5.68 0 0 0 5.68-5.68V9.02a7.35 7.35 0 0 0 4.28 1.37V7.3a4.28 4.28 0 0 1-3.22-1.48z"/></svg></span>
           <span class="social-handle">@zalma</span>
           <span class="social-badge">+25 pts</span>
         </a>
-        <a href="#" class="social-link" target="_blank" rel="noopener">
-          <span class="social-icon">&#x1F426;</span>
+        <a href="#" class="social-link" target="_blank" rel="noopener" aria-label="X">
+          <span class="social-icon"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span>
           <span class="social-handle">@zalma</span>
           <span class="social-badge">+25 pts</span>
         </a>
@@ -841,6 +872,22 @@
 
 <div id="footer-root"></div>
 <div id="bottomnav-root"></div>
+
+<!-- ===== UNBOXING SUBMIT MODAL ===== -->
+<div class="ubx-overlay" id="ubxOverlay" aria-hidden="true">
+  <div class="ubx-dialog" role="dialog" aria-modal="true" aria-labelledby="ubxTitle">
+    <button type="button" class="ubx-close" id="ubxClose" aria-label="Close">&times;</button>
+    <h3 id="ubxTitle">Share your unboxing</h3>
+    <p class="ubx-sub">Paste the link to your unboxing video. Once our team reviews and approves it, you'll earn 75 points.</p>
+    <label for="ubxUrl">Video URL</label>
+    <input type="url" id="ubxUrl" placeholder="https://www.tiktok.com/@you/video/..." autocomplete="off" />
+    <div class="ubx-msg" id="ubxMsg" role="status"></div>
+    <div class="ubx-actions">
+      <button type="button" class="btn btn-outline-light" id="ubxCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="ubxSubmit"><span>Submit</span></button>
+    </div>
+  </div>
+</div>
 
 <script src="api.js"></script>
 <script>
@@ -1347,6 +1394,66 @@ function initNavbarScroll(){
   }, { passive: true });
 }
 
+/* ---------- Unboxing video submission ---------- */
+function initUnboxingModal(){
+  const tile = document.getElementById('unboxingTile');
+  const overlay = document.getElementById('ubxOverlay');
+  if(!tile || !overlay) return;
+  const input = document.getElementById('ubxUrl');
+  const msg = document.getElementById('ubxMsg');
+  const submitBtn = document.getElementById('ubxSubmit');
+
+  const setMsg = (text, ok) => { msg.textContent = text || ''; msg.classList.toggle('ok', !!ok); };
+  const open = () => {
+    if(!(window.ZalmaAPI && ZalmaAPI.isLoggedIn && ZalmaAPI.isLoggedIn())){
+      showToast('Please log in to submit your unboxing');
+      return;
+    }
+    setMsg('');
+    input.value = '';
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+    setTimeout(() => input.focus(), 50);
+  };
+  const close = () => {
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+  };
+
+  tile.addEventListener('click', open);
+  tile.addEventListener('keydown', e => {
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); }
+  });
+  document.getElementById('ubxClose').addEventListener('click', close);
+  document.getElementById('ubxCancel').addEventListener('click', close);
+  overlay.addEventListener('click', e => { if(e.target === overlay) close(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && overlay.classList.contains('open')) close(); });
+  input.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); submitBtn.click(); } });
+
+  submitBtn.addEventListener('click', async () => {
+    const url = input.value.trim();
+    let valid = false;
+    try{ const u = new URL(url); valid = (u.protocol === 'http:' || u.protocol === 'https:'); }catch(e){}
+    if(!valid){ setMsg('Please paste a valid video link (starting with https://).'); return; }
+    if(typeof ZalmaAPI.submitUnboxing !== 'function'){
+      setMsg('Unboxing submission is not connected in api.js yet.');
+      return;
+    }
+    submitBtn.disabled = true;
+    setMsg('Submitting…', true);
+    try{
+      const res = await ZalmaAPI.submitUnboxing(url);
+      setMsg('');
+      close();
+      showToast((res && res.message) || 'Submitted! Pending review.');
+    }catch(err){
+      setMsg((err && err.message) || 'Could not submit right now. Please try again.');
+    }finally{
+      submitBtn.disabled = false;
+    }
+  });
+}
+
 /* ---------- App init ---------- */
 document.addEventListener('DOMContentLoaded', () => {
   const current = document.body.getAttribute('data-page') || 'index.html';
@@ -1402,6 +1509,9 @@ document.addEventListener('DOMContentLoaded', () => {
       animateProductGrid(grid);
     }
   }
+
+  /* ---------- Unboxing submission ---------- */
+  initUnboxingModal();
 
   document.body.classList.add('page-loaded');
 });
