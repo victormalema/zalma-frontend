@@ -1260,7 +1260,7 @@ function showToast(message, iconKey){
   }
   const toast = document.createElement('div');
   toast.className = 'toast';
-  toast.innerHTML = `${Icon[iconKey] || Icon.check}<span>${message}</span>`;
+  toast.innerHTML = `${Icon[iconKey] || ''}<span>${message}</span>`;
   wrap.appendChild(toast);
   requestAnimationFrame(() => toast.classList.add('show'));
   setTimeout(() => {
@@ -1406,7 +1406,7 @@ function initUnboxingModal(){
   const setMsg = (text, ok) => { msg.textContent = text || ''; msg.classList.toggle('ok', !!ok); };
   const open = () => {
     if(!(window.ZalmaAPI && ZalmaAPI.isLoggedIn && ZalmaAPI.isLoggedIn())){
-      showToast('Please log in to submit your unboxing');
+      showToast('Please log in to submit your unboxing', 'profile');
       return;
     }
     setMsg('');
@@ -1445,7 +1445,7 @@ function initUnboxingModal(){
       const res = await ZalmaAPI.submitUnboxing(url);
       setMsg('');
       close();
-      showToast((res && res.message) || 'Submitted! Pending review.');
+      showToast((res && res.message) || 'Submitted! Pending review.', 'bookmark');
     }catch(err){
       setMsg((err && err.message) || 'Could not submit right now. Please try again.');
     }finally{
