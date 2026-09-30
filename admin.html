@@ -221,10 +221,40 @@
     });
   }
 
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // The checkout page saves the delivery details as one string:
+  // "Full Name, Tel: 0712..., Location, City, Postal Code, Country"
+  // (older orders have no "Tel:" part). Split it back into its fields.
+  function parseDelivery(raw){
+    const parts = String(raw || '').split(', ').map(p => p.trim()).filter(Boolean);
+    if(parts.length < 5) return null;
+    const country = parts.pop();
+    const zip = parts.pop();
+    const city = parts.pop();
+    const name = parts.shift();
+    let phone = '';
+    if(parts.length && /^tel:/i.test(parts[0])) phone = parts.shift().replace(/^tel:\s*/i, '');
+    const location = parts.join(', ');
+    return { name, phone, location, city, zip, country };
+  }
+
+  function deliveryHTML(raw){
+    const d = parseDelivery(raw);
+    if(!d) return esc(raw) || '<span class="mono">—</span>';
+    const line = (label, val) => val
+      ? `<div><span class="mono">${label}:</span> ${esc(val)}</div>` : '';
+    return line('Name', d.name) + line('Phone', d.phone) + line('Location', d.location)
+         + line('City', d.city) + line('Postal Code', d.zip) + line('Country', d.country);
+  }
+
   function orderRowHTML(o){
     return `
     <tr data-id="${o.id}">
       <td data-label="Customer">${o.customer_name || o.customer_email || 'Unknown'}<br><span class="mono">${o.customer_email || ''}</span></td>
+      <td data-label="Delivery Details">${deliveryHTML(o.shipping_address)}</td>
       <td data-label="Date">${fmtDate(o.created_at)}</td>
       <td data-label="Total">${fmtKES(o.total)}</td>
       <td data-label="Points">${o.points_earned}</td>
@@ -249,7 +279,7 @@
         <h1>Orders</h1>
         <p class="section-sub">${orders.length} order${orders.length === 1 ? '' : 's'} total.</p>
         <table>
-          <thead><tr><th>Customer</th><th>Date</th><th>Total</th><th>Points</th><th>Status</th></tr></thead>
+          <thead><tr><th>Customer</th><th>Delivery Details</th><th>Date</th><th>Total</th><th>Points</th><th>Status</th></tr></thead>
           <tbody>${orders.map(orderRowHTML).join('')}</tbody>
         </table>
       `;
