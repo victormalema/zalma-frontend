@@ -76,6 +76,19 @@
     .site-bg video {
       position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
     }
+    /* Hide iOS/Safari native play button & controls on the background video */
+    .site-bg video::-webkit-media-controls,
+    .site-bg video::-webkit-media-controls-start-playback-button,
+    .site-bg video::-webkit-media-controls-panel,
+    .site-bg video::-webkit-media-controls-play-button,
+    .site-bg video::-webkit-media-controls-overlay-play-button,
+    .site-bg video::-webkit-media-controls-enclosure {
+      display: none !important;
+      -webkit-appearance: none !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
     .site-bg::after {
       content: '';
       position: absolute; inset: 0;
@@ -743,8 +756,10 @@
 
 <!-- ===== BACKGROUND VIDEO ===== -->
 <div class="site-bg" aria-hidden="true">
-  <video autoplay muted loop playsinline preload="metadata">
-    <source src="second video.mp4" type="video/mp4">
+  <video id="bgVideo" autoplay muted loop playsinline webkit-playsinline preload="auto"
+         disablepictureinpicture disableremoteplayback controlslist="nodownload nofullscreen noremoteplayback"
+         tabindex="-1">
+    <source src="second%20video.mp4" type="video/mp4">
   </video>
 </div>
 
@@ -1518,5 +1533,42 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+
+<script>
+/* Background video: force silent autoplay on iOS Safari/Chrome (no play button) */
+(function(){
+  var v = document.getElementById('bgVideo');
+  if(!v) return;
+  // iOS only honours autoplay if the *property* is set, not just the attribute
+  v.muted = true; v.defaultMuted = true; v.volume = 0;
+  v.setAttribute('muted',''); v.setAttribute('playsinline',''); v.setAttribute('webkit-playsinline','');
+  v.controls = false; v.removeAttribute('controls');
+
+  function tryPlay(){
+    if(!v.paused) return;
+    var p = v.play();
+    if(p && p.catch) p.catch(function(){ /* blocked - retried on first interaction below */ });
+  }
+
+  tryPlay();
+  v.addEventListener('loadedmetadata', tryPlay);
+  v.addEventListener('loadeddata', tryPlay);
+  v.addEventListener('canplay', tryPlay);
+  window.addEventListener('load', tryPlay);
+  window.addEventListener('pageshow', tryPlay);
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) tryPlay(); });
+
+  // iOS fallback (e.g. Low Power Mode): start on the first touch/scroll/click, invisibly
+  ['touchstart','touchend','pointerdown','click','scroll','keydown'].forEach(function(ev){
+    window.addEventListener(ev, function once(){
+      tryPlay();
+      if(!v.paused){ ['touchstart','touchend','pointerdown','click','scroll','keydown'].forEach(function(e){ window.removeEventListener(e, once, true); }); }
+    }, {capture:true, passive:true});
+  });
+
+  // keep it looping/playing if iOS pauses it
+  v.addEventListener('pause', function(){ if(!document.hidden) setTimeout(tryPlay, 150); });
+})();
+</script>
 </body>
 </html>
