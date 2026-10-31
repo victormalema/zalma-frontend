@@ -68,6 +68,11 @@ const ZalmaAPI = {
   getOrders(){ return this._request('/orders'); },
   getOrder(orderId){ return this._request('/orders/' + orderId); },
 
+  // ---------- M-Pesa payment & scan-to-claim ----------
+  payMpesa(orderId, phone){ return this._request('/payments/pay', { method: 'POST', body: JSON.stringify({ order_id: orderId, phone }) }); },
+  getPaymentStatus(orderId){ return this._request('/orders/' + orderId + '/payment-status'); },
+  claimOrderQR(code){ return this._request('/orders/claim-qr', { method: 'POST', body: JSON.stringify({ code }) }); },
+
   // ---------- rewards ----------
   getRewards(){ return this._request('/rewards'); },
   redeemPoints(points){ return this._request('/rewards/redeem', { method: 'POST', body: JSON.stringify({ points }) }); },
@@ -95,5 +100,3 @@ getAdminOrders(){ return this._request('/admin/orders'); },
 updateOrderStatus(orderId, status){ return this._request('/admin/orders/' + orderId, { method: 'PATCH', body: JSON.stringify({ status }) }); },
   moderateTestimonial(id, approve){ return this._request('/wall/admin/testimonials/' + id, { method: 'PATCH', body: JSON.stringify({ approve }) }); },
 };
-
- 

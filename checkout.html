@@ -1134,7 +1134,6 @@
         const subtotal = cart.subtotal;
         const deliveryFee = subtotal >= 15000 ? 0 : 500;
         const total = subtotal + deliveryFee;
-        let payMethod = 'card';
 
         root.innerHTML = `
           <div class="checkout-layout">
@@ -1145,7 +1144,7 @@
                   <div class="field"><label for="firstName">First Name</label><input id="firstName" required></div>
                   <div class="field"><label for="lastName">Last Name</label><input id="lastName" required></div>
                 </div>
-                <div class="field"><label for="phone">Phone Number</label><input id="phone" type="tel" inputmode="tel" placeholder="e.g. 0712 345 678" autocomplete="tel" required></div>
+                <div class="field"><label for="phone">M-Pesa Phone Number</label><input id="phone" type="tel" inputmode="tel" placeholder="e.g. 0712 345 678" autocomplete="tel" required></div>
                 <div class="field"><label for="address">Location</label><input id="address" required></div>
                 <div class="field-row">
                   <div class="field"><label for="city">City</label><input id="city" required></div>
@@ -1161,21 +1160,13 @@
               <div class="form-card">
                 <h3>Payment Method</h3>
                 <div class="pay-options" role="group" aria-label="Payment method">
-                  <button type="button" class="pay-option" data-pay="card" aria-pressed="true">Card</button>
-                  <button type="button" class="pay-option" data-pay="mpesa" aria-pressed="false">M-Pesa</button>
-                  <button type="button" class="pay-option" data-pay="paypal" aria-pressed="false">PayPal</button>
+                  <button type="button" class="pay-option" data-pay="mpesa" aria-pressed="true">M-Pesa</button>
                 </div>
-                <div id="cardFields" style="margin-top:20px">
-                  <div class="field"><label for="cardNumber">Card Number</label><input id="cardNumber" placeholder="•••• •••• •••• ••••" required></div>
-                  <div class="field-row">
-                    <div class="field"><label for="cardExpiry">Expiry</label><input id="cardExpiry" placeholder="MM / YY" required></div>
-                    <div class="field"><label for="cardCvc">CVC</label><input id="cardCvc" placeholder="•••" required></div>
-                  </div>
-                </div>
+                <p class="small" style="margin-top:16px;">After you tap the button below, an M-Pesa prompt is sent to the phone number above. Enter your M-Pesa PIN on your phone to pay.</p>
               </div>
 
-              <button type="submit" class="btn btn-primary btn-full">Place Order — KES ${total.toLocaleString()}</button>
-              <p class="small" style="text-align:center;margin-top:12px;">Payment is not processed yet — this places a real order, but no charge occurs.</p>
+              <button type="submit" class="btn btn-primary btn-full">Pay with M-Pesa — KES ${total.toLocaleString()}</button>
+              <p class="small" style="text-align:center;margin-top:12px;">You'll confirm the payment with your M-Pesa PIN on your phone.</p>
             </form>
 
             <div class="summary-card">
@@ -1193,40 +1184,84 @@
           </div>
         `;
 
-        const payButtons = root.querySelectorAll('.pay-option');
-        const cardFields = document.getElementById('cardFields');
-        payButtons.forEach(btn => btn.addEventListener('click', () => {
-          payMethod = btn.getAttribute('data-pay');
-          payButtons.forEach(b => b.setAttribute('aria-pressed', b === btn));
-          cardFields.style.display = payMethod === 'card' ? 'block' : 'none';
-        }));
+        let pendingOrder = null;   // order created but not paid yet (reused if the prompt fails)
+        const payLabel = `Pay with M-Pesa — KES ${total.toLocaleString()}`;
 
-        document.getElementById('checkoutForm').addEventListener('submit', (e) => {
+        // Checks the order every 3s until M-Pesa confirms, fails, or ~2 minutes pass.
+        function pollPayment(orderId, onDone) {
+          const started = Date.now();
+          const timer = setInterval(() => {
+            ZalmaAPI.getPaymentStatus(orderId).then(s => {
+              if (s.paid) { clearInterval(timer); onDone('paid'); }
+              else if (s.failed) { clearInterval(timer); onDone('failed'); }
+              else if (Date.now() - started > 120000) { clearInterval(timer); onDone('timeout'); }
+            }).catch(() => { /* brief network problem: keep trying */ });
+          }, 3000);
+        }
+
+        document.getElementById('checkoutForm').addEventListener('submit', async (e) => {
           e.preventDefault();
           const submitBtn = e.target.querySelector('button[type="submit"]');
+          const phone = document.getElementById('phone').value.trim();
           submitBtn.disabled = true;
-          submitBtn.textContent = 'Placing Order...';
+          submitBtn.textContent = 'Sending M-Pesa prompt...';
 
           const fullAddress = [
             document.getElementById('firstName').value + ' ' + document.getElementById('lastName').value,
-            'Tel: ' + document.getElementById('phone').value.trim(),
+            'Tel: ' + phone,
             document.getElementById('address').value,
             document.getElementById('city').value + ', ' + document.getElementById('zip').value,
             document.getElementById('country').value
           ].join(', ');
 
-          ZalmaAPI.checkout(fullAddress).then(res => {
-            openModal({
-              icon: 'check',
-              title: 'Order Placed',
-              body: `Thank you — your ZALMA order has been received. You earned ${res.order.points_earned || 0} points.`,
-              actionLabel: 'View My Orders',
-              actionHref: 'orders.html'
-            });
-          }).catch(err => {
-            showToast(err.message || 'Could not place order', 'cart');
+          try {
+            if (!pendingOrder) {
+              const res = await ZalmaAPI.checkout(fullAddress);
+              pendingOrder = res.order;
+            }
+            await ZalmaAPI.payMpesa(pendingOrder.id, phone);
+          } catch (err) {
+            showToast(err.message || 'Could not start payment', 'cart');
             submitBtn.disabled = false;
-            submitBtn.textContent = `Place Order — KES ${total.toLocaleString()}`;
+            submitBtn.textContent = payLabel;
+            return;
+          }
+
+          const safePhone = phone.replace(/[^0-9+ ]/g, '');
+          const closeWaiting = openModal({
+            icon: 'check',
+            title: 'Check your phone',
+            body: `We sent an M-Pesa prompt to ${safePhone}. Enter your PIN to complete the payment, and keep this page open.`
+          });
+          submitBtn.textContent = 'Waiting for payment...';
+
+          pollPayment(pendingOrder.id, (result) => {
+            closeWaiting();
+            if (result === 'paid') {
+              const pts = pendingOrder.points_earned || 0;
+              pendingOrder = null;
+              try { updateNavBadges(); } catch (_) {}
+              openModal({
+                icon: 'check',
+                title: 'Payment received',
+                body: `Thank you — your ZALMA order is confirmed. When your package arrives, scan the QR card inside it from the Rewards section to claim your ${pts} points.`,
+                actionLabel: 'View My Orders',
+                actionHref: 'orders.html'
+              });
+            } else if (result === 'failed') {
+              pendingOrder = null;   // the server cancelled it and put the stock back
+              showToast('Payment was cancelled or failed. Please try again.', 'cart');
+              submitBtn.disabled = false;
+              submitBtn.textContent = payLabel;
+            } else {
+              openModal({
+                icon: 'check',
+                title: 'Still waiting',
+                body: "We haven't received confirmation yet. If M-Pesa already charged you, your order will update shortly. Please check My Orders before trying again.",
+                actionLabel: 'View My Orders',
+                actionHref: 'orders.html'
+              });
+            }
           });
         });
       }).catch(() => {
