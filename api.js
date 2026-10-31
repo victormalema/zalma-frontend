@@ -98,5 +98,6 @@ getAdminDashboard(){ return this._request('/admin/dashboard'); },
 getAdminUsers(){ return this._request('/admin/users'); },
 getAdminOrders(){ return this._request('/admin/orders'); },
 updateOrderStatus(orderId, status){ return this._request('/admin/orders/' + orderId, { method: 'PATCH', body: JSON.stringify({ status }) }); },
+getOrderQR(orderId){ return this._request('/admin/orders/' + orderId + '/qr'); },
   moderateTestimonial(id, approve){ return this._request('/wall/admin/testimonials/' + id, { method: 'PATCH', body: JSON.stringify({ approve }) }); },
 };

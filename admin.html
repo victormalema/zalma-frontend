@@ -109,7 +109,7 @@
   .pill.paid, .pill.processing{ background:rgba(64,150,255,0.15); color:#5aa9ff; }
   .pill.shipped{ background:rgba(140,100,255,0.15); color:#a98bff; }
   .pill.delivered{ background:rgba(62,207,142,0.15); color:var(--success); }
-  .pill.cancelled{ background:rgba(255,92,92,0.15); color:var(--danger); }
+  .pill.cancelled, .pill.payment_failed{ background:rgba(255,92,92,0.15); color:var(--danger); }
   .admin-tag{ font-size:11px; background:var(--accent); color:#fff; padding:2px 7px; border-radius:8px; margin-left:6px; }
 
   .card{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:20px; margin-bottom:14px; }
@@ -187,7 +187,19 @@
     return s.charAt(0).toUpperCase() + s.slice(1);
   }
 
-  const STATUSES = ['pending','paid','processing','shipped','delivered','cancelled'];
+  // What each order may be changed to. Mirrors the backend rules: an order becomes
+  // 'paid' only when M-Pesa confirms it, so unpaid orders can never be shipped.
+  const NEXT_STATUS = {
+    pending: [],
+    payment_failed: [],
+    paid: ['processing', 'shipped', 'cancelled'],
+    processing: ['shipped', 'cancelled'],
+    shipped: ['delivered'],
+    delivered: [],
+    cancelled: []
+  };
+  const PRINTABLE = ['paid', 'processing', 'shipped', 'delivered'];
+  const statusLabel = s => capitalize(String(s).replace('_', ' '));
 
   function loadDashboard(){
     const el = document.getElementById('panel-dashboard');
@@ -259,11 +271,55 @@
       <td data-label="Total">${fmtKES(o.total)}</td>
       <td data-label="Points">${o.points_earned}</td>
       <td data-label="Status">
-        <select class="status-select" data-order-id="${o.id}">
-          ${STATUSES.map(s => `<option value="${s}" ${s === o.status ? 'selected' : ''}>${capitalize(s)}</option>`).join('')}
+        <select class="status-select" data-order-id="${o.id}" data-current="${esc(o.status)}" ${(NEXT_STATUS[o.status] || []).length ? '' : 'disabled'}>
+          ${[o.status].concat(NEXT_STATUS[o.status] || []).map(s => `<option value="${esc(s)}" ${s === o.status ? 'selected' : ''}>${statusLabel(s)}</option>`).join('')}
         </select>
       </td>
+      <td data-label="Package Card">
+        ${PRINTABLE.includes(o.status) ? `<button class="btn print-card" data-order-id="${o.id}">Print card</button>` : '<span class="section-sub">After payment</span>'}
+      </td>
     </tr>`;
+  }
+
+  // Opens a print window with the QR card that goes inside the package.
+  function printCard(btn){
+    const orderId = btn.getAttribute('data-order-id');
+    const w = window.open('', '_blank');   // open first so the popup is not blocked
+    if(!w){ showToast('Please allow pop-ups to print the card'); return; }
+    w.document.write('<p style="font-family:sans-serif">Preparing card…</p>');
+    btn.disabled = true;
+    ZalmaAPI.getOrderQR(orderId).then(q => {
+      w.document.open();
+      w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>ZALMA card ${esc(q.short_id)}</title>
+        <style>
+          @page { size: 90mm 60mm; margin: 0; }
+          body { margin:0; font-family: Helvetica, Arial, sans-serif; color:#000; }
+          .card { width:90mm; height:60mm; box-sizing:border-box; padding:5mm; display:flex; align-items:center; gap:5mm; }
+          .qr { width:40mm; height:40mm; flex:none; }
+          .qr svg { width:100%; height:100%; }
+          h1 { margin:0 0 2mm; font-size:5.5mm; letter-spacing:1.2mm; }
+          p { margin:0 0 1.5mm; font-size:3mm; line-height:1.35; }
+          .code { font-family: monospace; font-size:2.8mm; word-break:break-all; }
+          .small { font-size:2.4mm; color:#444; }
+        </style></head><body>
+        <div class="card">
+          <div class="qr">${q.svg}</div>
+          <div>
+            <h1>ZALMA</h1>
+            <p><strong>Scan to claim your points.</strong></p>
+            <p>Open your phone camera, or tap Scan in the Rewards section on our site.</p>
+            <p class="code">${esc(q.code)}</p>
+            <p class="small">Order ${esc(q.short_id)}</p>
+          </div>
+        </div>
+        <script>window.onload = function(){ window.print(); };<\/script>
+        </body></html>`);
+      w.document.close();
+      if(q.claimed){ showToast('Note: this card was already claimed'); }
+    }).catch(err => {
+      w.close();
+      showToast(err.message || 'Could not make the card');
+    }).finally(() => { btn.disabled = false; });
   }
 
   function loadOrders(){
@@ -279,7 +335,7 @@
         <h1>Orders</h1>
         <p class="section-sub">${orders.length} order${orders.length === 1 ? '' : 's'} total.</p>
         <table>
-          <thead><tr><th>Customer</th><th>Delivery Details</th><th>Date</th><th>Total</th><th>Points</th><th>Status</th></tr></thead>
+          <thead><tr><th>Customer</th><th>Delivery Details</th><th>Date</th><th>Total</th><th>Points</th><th>Status</th><th>Package Card</th></tr></thead>
           <tbody>${orders.map(orderRowHTML).join('')}</tbody>
         </table>
       `;
@@ -290,10 +346,16 @@
           sel.disabled = true;
           ZalmaAPI.updateOrderStatus(orderId, newStatus).then(() => {
             showToast('Order status updated');
+            loadOrders();   // redraw so the dropdown only offers the next valid steps
           }).catch(err => {
             showToast(err.message || 'Could not update order');
-          }).finally(() => { sel.disabled = false; });
+            sel.value = sel.getAttribute('data-current');
+            sel.disabled = false;
+          });
         });
+      });
+      el.querySelectorAll('.print-card').forEach(btn => {
+        btn.addEventListener('click', () => printCard(btn));
       });
     }).catch(() => {
       el.innerHTML = '<h1>Orders</h1><div class="empty">Could not load orders.</div>';
