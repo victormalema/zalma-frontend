@@ -460,7 +460,7 @@
     }
 
     .reward-tiles {
-      display: grid; grid-template-columns: repeat(3, 1fr);
+      display: grid; grid-template-columns: repeat(4, 1fr);
       gap: var(--sp-3); margin-top: var(--sp-5);
     }
     .reward-tile {
@@ -519,6 +519,37 @@
       color: var(--c-ink-soft); font-size: 22px; line-height: 1; cursor: pointer;
     }
     .ubx-close:hover { color: #fff; }
+
+    /* Scan-to-claim modal */
+    .scan-frame {
+      position: relative; width: 100%; aspect-ratio: 1 / 1; background: #000;
+      border: 1px solid rgba(255,255,255,0.12); overflow: hidden; margin-bottom: var(--sp-3);
+    }
+    .scan-frame video { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .scan-frame::after {
+      content: ""; position: absolute; inset: 18%;
+      border: 2px solid rgba(220,225,232,0.85);
+      box-shadow: 0 0 0 999px rgba(0,0,0,0.35);
+      pointer-events: none;
+    }
+    .scan-frame.idle video { visibility: hidden; }
+    .scan-frame.idle::after { display: none; }
+    .scan-idle {
+      position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+      text-align: center; padding: var(--sp-4); font-size: 13px; color: var(--c-ink-soft); line-height: 1.5;
+    }
+    .scan-frame.idle .scan-idle { display: flex; }
+    .scan-divider {
+      display: flex; align-items: center; gap: 10px; margin: var(--sp-3) 0;
+      font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--c-ink-faint);
+    }
+    .scan-divider::before, .scan-divider::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.08); }
+    .ubx-dialog input[type="text"] {
+      width: 100%; box-sizing: border-box; padding: 13px 14px; font-size: 14px;
+      background: rgba(255,255,255,0.04); color: #fff;
+      border: 1px solid rgba(255,255,255,0.12); outline: none; font-family: inherit;
+    }
+    .ubx-dialog input[type="text"]:focus { border-color: var(--c-silver); }
 
     .social-section {
       margin-top: var(--sp-6); padding-top: var(--sp-5);
@@ -767,7 +798,6 @@
       .footer-logo-col { grid-column: 1/-1; }
       .product-grid .product-card { width: 190px; }
       .reward-tiles { grid-template-columns: repeat(2, 1fr); }
-      .reward-tiles .reward-tile:last-child { grid-column: 1 / -1; }
       .rewards-panel .panel-header { flex-direction: column; align-items: flex-start; }
       .rewards-panel .panel-header .points-display { text-align: left; }
       .social-section { flex-direction: column; align-items: stretch; gap: var(--sp-2); }
@@ -890,6 +920,12 @@
           <div class="tile-value">+100 pts</div>
           <div class="tile-points">Per friend</div>
         </a>
+        <div class="reward-tile reward-tile-action" id="scanTile" role="button" tabindex="0" aria-haspopup="dialog" aria-label="Scan the QR card in your package to claim your purchase points">
+          <span class="tile-icon">&#x1F4F7;</span>
+          <div class="tile-label">Scan</div>
+          <div class="tile-value">Package QR</div>
+          <div class="tile-points">Claim purchase pts</div>
+        </div>
         <div class="reward-tile reward-tile-action" id="unboxingTile" role="button" tabindex="0" aria-haspopup="dialog">
           <span class="tile-icon">&#x1F4E6;</span>
           <div class="tile-label">Unboxing</div>
@@ -958,6 +994,27 @@
     <div class="ubx-actions">
       <button type="button" class="btn btn-outline-light" id="ubxCancel">Cancel</button>
       <button type="button" class="btn btn-primary" id="ubxSubmit"><span>Submit</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SCAN-TO-CLAIM MODAL ===== -->
+<div class="ubx-overlay" id="scanOverlay" aria-hidden="true">
+  <div class="ubx-dialog" role="dialog" aria-modal="true" aria-labelledby="scanTitle">
+    <button type="button" class="ubx-close" id="scanClose" aria-label="Close">&times;</button>
+    <h3 id="scanTitle">Scan your package card</h3>
+    <p class="ubx-sub">Point your camera at the QR code on the card inside your ZALMA package to claim the points for your purchase.</p>
+    <div class="scan-frame idle" id="scanFrame">
+      <video id="scanVideo" playsinline muted></video>
+      <div class="scan-idle" id="scanIdle">Starting camera…</div>
+    </div>
+    <div class="scan-divider">or enter code</div>
+    <label for="scanCode">Code on card</label>
+    <input type="text" id="scanCode" placeholder="Paste or type your code" autocomplete="off" autocapitalize="off" spellcheck="false" />
+    <div class="ubx-msg" id="scanMsg" role="status"></div>
+    <div class="ubx-actions">
+      <button type="button" class="btn btn-outline-light" id="scanCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="scanSubmit"><span>Claim</span></button>
     </div>
   </div>
 </div>
@@ -1528,6 +1585,189 @@ function initUnboxingModal(){
   });
 }
 
+/* ---------- Scan package QR to claim purchase points ---------- */
+function initScanModal(){
+  const tile = document.getElementById('scanTile');
+  const overlay = document.getElementById('scanOverlay');
+  if(!tile || !overlay) return;
+  const frame = document.getElementById('scanFrame');
+  const video = document.getElementById('scanVideo');
+  const idleEl = document.getElementById('scanIdle');
+  const input = document.getElementById('scanCode');
+  const msg = document.getElementById('scanMsg');
+  const submitBtn = document.getElementById('scanSubmit');
+  const PENDING_KEY = 'zalma_pending_claim';
+  const JSQR_SRC = 'https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js';
+
+  let stream = null, rafId = 0, detector = null, busy = false, jsQRPromise = null;
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  const setMsg = (text, ok) => { msg.textContent = text || ''; msg.classList.toggle('ok', !!ok); };
+  const setIdle = (text) => { frame.classList.add('idle'); idleEl.textContent = text; };
+
+  /* The QR may hold a full URL (…?claim=CODE) or just the raw code */
+  function extractCode(raw){
+    raw = String(raw || '').trim();
+    if(!raw) return '';
+    try{
+      const u = new URL(raw);
+      const c = u.searchParams.get('claim');
+      if(c) return c.trim();
+    }catch(e){}
+    return /^[A-Za-z0-9_-]{8,64}$/.test(raw) ? raw : '';
+  }
+
+  function loadJsQR(){
+    if(window.jsQR) return Promise.resolve();
+    if(!jsQRPromise){
+      jsQRPromise = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = JSQR_SRC; s.onload = resolve; s.onerror = reject;
+        document.head.appendChild(s);
+      });
+    }
+    return jsQRPromise;
+  }
+
+  async function startCamera(){
+    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+      setIdle('Camera is not available on this device. Enter the code below instead.');
+      return;
+    }
+    try{
+      if('BarcodeDetector' in window){
+        try{ detector = new BarcodeDetector({ formats: ['qr_code'] }); }catch(e){ detector = null; }
+      }
+      if(!detector) await loadJsQR();
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+      video.srcObject = stream;
+      await video.play();
+      frame.classList.remove('idle');
+      tick();
+    }catch(err){
+      const denied = err && (err.name === 'NotAllowedError' || err.name === 'SecurityError');
+      setIdle(denied ? 'Camera permission was denied. Allow camera access, or enter the code below.'
+                     : 'Could not start the camera. Enter the code below instead.');
+    }
+  }
+
+  function stopCamera(){
+    cancelAnimationFrame(rafId); rafId = 0;
+    if(stream){ stream.getTracks().forEach(t => t.stop()); stream = null; }
+    video.srcObject = null;
+  }
+
+  async function tick(){
+    if(!stream) return;
+    if(!busy && video.readyState >= 2){
+      let value = '';
+      try{
+        if(detector){
+          const found = await detector.detect(video);
+          if(found && found.length) value = found[0].rawValue;
+        }else if(window.jsQR){
+          const w = video.videoWidth, h = video.videoHeight;
+          if(w && h){
+            canvas.width = w; canvas.height = h;
+            ctx.drawImage(video, 0, 0, w, h);
+            const res = jsQR(ctx.getImageData(0, 0, w, h).data, w, h, { inversionAttempts: 'dontInvert' });
+            if(res) value = res.data;
+          }
+        }
+      }catch(e){}
+      if(value){
+        const code = extractCode(value);
+        if(code){ claim(code); }
+        else { setMsg('That QR code is not a ZALMA package card.'); }
+      }
+    }
+    rafId = requestAnimationFrame(() => setTimeout(tick, 120));
+  }
+
+  async function claim(code){
+    if(busy) return;
+    if(typeof ZalmaAPI === 'undefined' || !ZalmaAPI.isLoggedIn || !ZalmaAPI.isLoggedIn()){
+      try{ sessionStorage.setItem(PENDING_KEY, code); }catch(e){}
+      setMsg('Please log in to claim your points. We saved your code — claim it right after you sign in.');
+      return;
+    }
+    if(typeof ZalmaAPI.claimOrderQR !== 'function'){
+      setMsg('Scan claiming is not connected in api.js yet.');
+      return;
+    }
+    busy = true; submitBtn.disabled = true;
+    setMsg('Claiming…', true);
+    try{
+      const res = await ZalmaAPI.claimOrderQR(code);
+      try{ sessionStorage.removeItem(PENDING_KEY); }catch(e){}
+      const pts = res && (res.points_awarded != null ? res.points_awarded : res.points);
+      if(res && res.points_balance != null){
+        const d = document.getElementById('homePointsDisplay');
+        if(d) d.textContent = Number(res.points_balance).toLocaleString();
+      }
+      close();
+      showToast((res && res.message) || (pts ? ('+' + pts + ' points added!') : 'Points claimed!'), 'bookmark');
+    }catch(err){
+      const m = (err && err.message) || '';
+      if(/401|unauthori[sz]ed|token|not logged|log ?in|expired/i.test(m)){
+        setMsg('Please log in again to claim your points.');
+      }else if(/already/i.test(m)){
+        setMsg('This card has already been claimed.');
+      }else{
+        setMsg(m || 'Could not claim right now. Please try again.');
+      }
+      busy = false; submitBtn.disabled = false;
+      return;
+    }
+    busy = false; submitBtn.disabled = false;
+  }
+
+  function open(useCamera){
+    setMsg(''); input.value = ''; busy = false; submitBtn.disabled = false;
+    setIdle(useCamera === false ? 'Claiming your package code…' : 'Starting camera…');
+    overlay.classList.add('open');
+    overlay.setAttribute('aria-hidden', 'false');
+    if(useCamera !== false) startCamera();
+  }
+  function close(){
+    stopCamera();
+    overlay.classList.remove('open');
+    overlay.setAttribute('aria-hidden', 'true');
+  }
+
+  tile.addEventListener('click', () => open());
+  tile.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); } });
+  document.getElementById('scanClose').addEventListener('click', close);
+  document.getElementById('scanCancel').addEventListener('click', close);
+  overlay.addEventListener('click', e => { if(e.target === overlay) close(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && overlay.classList.contains('open')) close(); });
+  input.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); submitBtn.click(); } });
+  submitBtn.addEventListener('click', () => {
+    const code = extractCode(input.value);
+    if(!code){ setMsg('Please enter the code printed on your card.'); return; }
+    claim(code);
+  });
+
+  /* Deep link: the QR opens home.html?claim=CODE when scanned with the phone's own camera app */
+  let deep = '';
+  try{
+    const params = new URLSearchParams(location.search);
+    deep = (params.get('claim') || '').trim();
+    if(deep){
+      params.delete('claim');
+      const qs = params.toString();
+      history.replaceState(null, '', location.pathname + (qs ? '?' + qs : '') + location.hash);
+    }
+  }catch(e){}
+  if(!deep){ try{ deep = sessionStorage.getItem(PENDING_KEY) || ''; }catch(e){} }
+  if(deep && extractCode(deep)){
+    open(false);
+    input.value = deep;
+    claim(extractCode(deep));
+  }
+}
+
 /* ---------- Claim-rank-card prompt (first-time, signed-out visitors) ---------- */
 function initClaimRankPrompt(){
   const SIGNIN_URL = 'profile.html';              // <- page where users sign in / sign up
@@ -1693,6 +1933,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ---------- Unboxing submission ---------- */
   initUnboxingModal();
+  initScanModal();
   initClaimRankPrompt();
 
   document.body.classList.add('page-loaded');
