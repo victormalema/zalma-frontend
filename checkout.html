@@ -1132,8 +1132,11 @@
 
         const items = cart.items;
         const subtotal = cart.subtotal;
-        const deliveryFee = subtotal >= 15000 ? 0 : 500;
-        const total = subtotal + deliveryFee;
+        // Flat delivery pricing: Nairobi KES 200, everywhere else KES 350.
+        // (The server works out the same fee from the county, so the charge always matches.)
+        const feeFor = (county) => !county ? 0 : (county === 'Nairobi' ? 200 : 350);
+        let deliveryFee = 0;
+        const totalNow = () => subtotal + deliveryFee;
 
         root.innerHTML = `
           <div class="checkout-layout">
@@ -1147,7 +1150,7 @@
                 <div class="field"><label for="phone">M-Pesa Phone Number</label><input id="phone" type="tel" inputmode="tel" placeholder="e.g. 0712 345 678" autocomplete="tel" required></div>
                 <div class="field"><label for="address">Location</label><input id="address" required></div>
                 <div class="field-row">
-                  <div class="field"><label for="city">City</label><input id="city" required></div>
+                  <div class="field"><label for="city">County</label><select id="city" required><option value="" disabled selected>Select county</option><option>Nairobi</option><option>Mombasa</option><option>Kwale</option><option>Kilifi</option><option>Tana River</option><option>Lamu</option><option>Taita-Taveta</option><option>Garissa</option><option>Wajir</option><option>Mandera</option><option>Marsabit</option><option>Isiolo</option><option>Meru</option><option>Tharaka-Nithi</option><option>Embu</option><option>Kitui</option><option>Machakos</option><option>Makueni</option><option>Nyandarua</option><option>Nyeri</option><option>Kirinyaga</option><option>Murang'a</option><option>Kiambu</option><option>Turkana</option><option>West Pokot</option><option>Samburu</option><option>Trans Nzoia</option><option>Uasin Gishu</option><option>Elgeyo-Marakwet</option><option>Nandi</option><option>Baringo</option><option>Laikipia</option><option>Nakuru</option><option>Narok</option><option>Kajiado</option><option>Kericho</option><option>Bomet</option><option>Kakamega</option><option>Vihiga</option><option>Bungoma</option><option>Busia</option><option>Siaya</option><option>Kisumu</option><option>Homa Bay</option><option>Migori</option><option>Kisii</option><option>Nyamira</option></select></div>
                   <div class="field"><label for="zip">Postal Code</label><input id="zip" required></div>
                 </div>
                 <div class="field"><label for="country">Country</label>
@@ -1165,7 +1168,7 @@
                 <p class="small" style="margin-top:16px;">After you tap the button below, an M-Pesa prompt is sent to the phone number above. Enter your M-Pesa PIN on your phone to pay.</p>
               </div>
 
-              <button type="submit" class="btn btn-primary btn-full">Pay with M-Pesa — KES ${total.toLocaleString()}</button>
+              <button type="submit" id="payBtn" class="btn btn-primary btn-full">Pay with M-Pesa — KES ${subtotal.toLocaleString()}</button>
               <p class="small" style="text-align:center;margin-top:12px;">You'll confirm the payment with your M-Pesa PIN on your phone.</p>
             </form>
 
@@ -1178,14 +1181,25 @@
                 </div>
               `).join('')}
               <div class="summary-row"><span>Subtotal</span><span>KES ${subtotal.toLocaleString()}</span></div>
-              <div class="summary-row"><span>Delivery Fee</span><span>${deliveryFee === 0 ? 'Free' : 'KES ' + deliveryFee}</span></div>
-              <div class="summary-row total"><span>Total</span><span>KES ${total.toLocaleString()}</span></div>
+              <div class="summary-row"><span>Delivery Fee</span><span id="feeValue">Select county</span></div>
+              <div class="summary-row total"><span>Total</span><span id="totalValue">KES ${subtotal.toLocaleString()}</span></div>
             </div>
           </div>
         `;
 
         let pendingOrder = null;   // order created but not paid yet (reused if the prompt fails)
-        const payLabel = `Pay with M-Pesa — KES ${total.toLocaleString()}`;
+        const payLabel = () => `Pay with M-Pesa — KES ${totalNow().toLocaleString()}`;
+
+        // Updates delivery fee, total and button text when the county changes.
+        function updateTotals() {
+          const county = document.getElementById('city').value;
+          deliveryFee = feeFor(county);
+          document.getElementById('feeValue').textContent = county ? 'KES ' + deliveryFee : 'Select county';
+          document.getElementById('totalValue').textContent = 'KES ' + totalNow().toLocaleString();
+          const b = document.getElementById('payBtn');
+          if (b && !b.disabled) b.textContent = payLabel();
+        }
+        document.getElementById('city').addEventListener('change', updateTotals);
 
         // Checks the order every 3s until M-Pesa confirms, fails, or ~2 minutes pass.
         function pollPayment(orderId, onDone) {
@@ -1218,12 +1232,13 @@
             if (!pendingOrder) {
               const res = await ZalmaAPI.checkout(fullAddress);
               pendingOrder = res.order;
+              document.getElementById('city').disabled = true;   // the order's delivery fee is now fixed
             }
             await ZalmaAPI.payMpesa(pendingOrder.id, phone);
           } catch (err) {
             showToast(err.message || 'Could not start payment', 'cart');
             submitBtn.disabled = false;
-            submitBtn.textContent = payLabel;
+            submitBtn.textContent = payLabel();
             return;
           }
 
@@ -1250,9 +1265,10 @@
               });
             } else if (result === 'failed') {
               pendingOrder = null;   // the server cancelled it and put the stock back
+              document.getElementById('city').disabled = false;
               showToast('Payment was cancelled or failed. Please try again.', 'cart');
               submitBtn.disabled = false;
-              submitBtn.textContent = payLabel;
+              submitBtn.textContent = payLabel();
             } else {
               openModal({
                 icon: 'check',
