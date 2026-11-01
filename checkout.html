@@ -1119,7 +1119,7 @@
       root.innerHTML =
         '<p style="opacity:0.4;padding:40px 0;text-align:center;color:rgba(255,255,255,0.3);">Loading your cart...</p>';
 
-      ZalmaAPI.getCart().then(cart => {
+      Promise.all([ZalmaAPI.getCart(), ZalmaAPI.getDeliveryFees().catch(() => null)]).then(([cart, fees]) => {
         if (cart.items.length === 0) {
           root.innerHTML = `
             <div class="cart-empty">
@@ -1134,7 +1134,9 @@
         const subtotal = cart.subtotal;
         // Flat delivery pricing: Nairobi KES 200, everywhere else KES 350.
         // (The server works out the same fee from the county, so the charge always matches.)
-        const feeFor = (county) => !county ? 0 : (county === 'Nairobi' ? 200 : 350);
+        // Prices come from the server, so switching delivery fees off there also switches them off here.
+        const feeCfg = fees || { enabled: true, nairobi: 200, other: 350 };
+        const feeFor = (county) => (!county || !feeCfg.enabled) ? 0 : (county === 'Nairobi' ? feeCfg.nairobi : feeCfg.other);
         let deliveryFee = 0;
         const totalNow = () => subtotal + deliveryFee;
 
@@ -1181,7 +1183,7 @@
                 </div>
               `).join('')}
               <div class="summary-row"><span>Subtotal</span><span>KES ${subtotal.toLocaleString()}</span></div>
-              <div class="summary-row"><span>Delivery Fee</span><span id="feeValue">Select county</span></div>
+              <div class="summary-row"><span>Delivery Fee</span><span id="feeValue">${feeCfg.enabled ? 'Select county' : 'Free'}</span></div>
               <div class="summary-row total"><span>Total</span><span id="totalValue">KES ${subtotal.toLocaleString()}</span></div>
             </div>
           </div>
@@ -1194,7 +1196,7 @@
         function updateTotals() {
           const county = document.getElementById('city').value;
           deliveryFee = feeFor(county);
-          document.getElementById('feeValue').textContent = county ? 'KES ' + deliveryFee : 'Select county';
+          document.getElementById('feeValue').textContent = !feeCfg.enabled ? 'Free' : (county ? 'KES ' + deliveryFee : 'Select county');
           document.getElementById('totalValue').textContent = 'KES ' + totalNow().toLocaleString();
           const b = document.getElementById('payBtn');
           if (b && !b.disabled) b.textContent = payLabel();

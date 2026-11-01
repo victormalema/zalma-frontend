@@ -66,6 +66,7 @@ const ZalmaAPI = {
   // ---------- checkout & orders ----------
   checkout(shippingAddress){ return this._request('/checkout', { method: 'POST', body: JSON.stringify({ shipping_address: shippingAddress }) }); },
   getOrders(){ return this._request('/orders'); },
+  getDeliveryFees(){ return this._request('/delivery-fees'); },
   getOrder(orderId){ return this._request('/orders/' + orderId); },
 
   // ---------- M-Pesa payment & scan-to-claim ----------
