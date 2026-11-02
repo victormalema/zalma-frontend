@@ -1119,7 +1119,7 @@
       root.innerHTML =
         '<p style="opacity:0.4;padding:40px 0;text-align:center;color:rgba(255,255,255,0.3);">Loading your cart...</p>';
 
-      Promise.all([ZalmaAPI.getCart(), ZalmaAPI.getDeliveryFees().catch(() => null)]).then(([cart, fees]) => {
+      Promise.all([ZalmaAPI.getCart(), (ZalmaAPI.getDeliveryFees ? ZalmaAPI.getDeliveryFees().catch(() => null) : Promise.resolve(null))]).then(([cart, fees]) => {
         if (cart.items.length === 0) {
           root.innerHTML = `
             <div class="cart-empty">
@@ -1282,10 +1282,20 @@
             }
           });
         });
-      }).catch(() => {
+      }).catch((err) => {
+        console.error('Checkout failed to load:', err);
         root.innerHTML =
-          `<div class="cart-empty"><h3>Could not load your cart</h3><p class="lede">Please try again shortly.</p></div>`;
+          `<div class="cart-empty"><h3>Could not load your cart</h3><p class="lede">Please try again shortly.</p><p class="small" style="opacity:0.5;">${String((err && err.message) || err).replace(/[<>&]/g, '')}</p></div>`;
       });
+    });
+
+    // If any script error stops the page while it still says "Loading", show that error on screen.
+    window.addEventListener('error', function (e) {
+      var r = document.getElementById('checkoutRoot');
+      if (r && /Loading your cart/.test(r.textContent)) {
+        r.innerHTML = '<div class="cart-empty"><h3>Checkout could not start</h3><p class="lede">Please send this message to support:</p><p class="small">' +
+          String(e.message || 'Unknown error').replace(/[<>&]/g, '') + ' (line ' + (e.lineno || '?') + ')</p></div>';
+      }
     });
   </script>
 
