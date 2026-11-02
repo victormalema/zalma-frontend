@@ -513,6 +513,14 @@
     .ubx-msg { min-height: 18px; font-size: 12px; margin-top: 8px; color: #ff8b8b; }
     .ubx-msg.ok { color: #9be3b0; }
     .ubx-actions { display: flex; gap: var(--sp-3); margin-top: var(--sp-4); }
+    .qa-opts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--sp-4); }
+    .qa-opt {
+      min-width: 44px; padding: 10px 14px; font-size: 12px; letter-spacing: 0.08em;
+      background: transparent; color: #fff; cursor: pointer; font-family: inherit;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+    .qa-opt:hover { border-color: rgba(255,255,255,0.6); }
+    .qa-opt.sel { background: #fff; color: #0b0a0c; border-color: #fff; }
     .ubx-actions .btn { flex: 1; justify-content: center; }
     .ubx-close {
       position: absolute; top: 10px; right: 12px; background: none; border: 0;
@@ -1235,7 +1243,7 @@ const Wishlist = {
 
 function updateNavBadges(){
   document.querySelectorAll('[data-cart-count]').forEach(el => {
-    const n = Cart.count();
+    const n = (window.__zCartCount != null) ? window.__zCartCount : Cart.count();
     el.textContent = n;
     el.style.display = n > 0 ? 'flex' : 'none';
   });
@@ -1451,15 +1459,106 @@ function initWishlistButtons(){
   });
 }
 
+/* ---------- Quick add: saves to the real (server) cart, the same one cart.html shows ---------- */
+const ZProducts = {};   // products loaded from the API, by id
+
+function isSignedIn(){
+  return typeof ZalmaAPI !== 'undefined' && ZalmaAPI.isLoggedIn && ZalmaAPI.isLoggedIn();
+}
+
+// Shows the real number of items in the bag on the nav badge.
+function syncCartBadge(){
+  if(!isSignedIn() || !ZalmaAPI.getCart) return;
+  ZalmaAPI.getCart().then(c => {
+    window.__zCartCount = (c.items || []).reduce((n, i) => n + (i.quantity || 0), 0);
+    updateNavBadges();
+  }).catch(() => {});
+}
+
+function qaOptionName(o){ return (o && typeof o === 'object') ? (o.name || o.label || o.value || '') : String(o); }
+function qaEsc(t){ return String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function sendToBag(id, size, color, btn, done){
+  if(btn) btn.disabled = true;
+  ZalmaAPI.addToCart({ product_id: id, size: size, color: color, quantity: 1 }).then(() => {
+    showToast('Added to bag', 'bag');
+    if(btn){ btn.classList.remove('pulse'); void btn.offsetWidth; btn.classList.add('pulse'); }
+    syncCartBadge();
+    if(done) done(true);
+  }).catch(err => {
+    showToast((err && err.message) || 'Could not add to bag', 'bag');
+    if(done) done(false, err);
+  }).finally(() => { if(btn) btn.disabled = false; });
+}
+
+// Size / colour chooser, shown only for products that have options.
+function openQuickAddPicker(p, sizes, colors, btn){
+  const old = document.getElementById('qaOverlay');
+  if(old) old.remove();
+  const group = (label, key, list) => list.length ? `
+      <label>${label}</label>
+      <div class="qa-opts" data-group="${key}">
+        ${list.map(v => `<button type="button" class="qa-opt${list.length === 1 ? ' sel' : ''}" data-val="${qaEsc(v)}">${qaEsc(v)}</button>`).join('')}
+      </div>` : '';
+  const ov = document.createElement('div');
+  ov.className = 'ubx-overlay open';
+  ov.id = 'qaOverlay';
+  ov.innerHTML = `
+    <div class="ubx-dialog" role="dialog" aria-modal="true">
+      <button type="button" class="ubx-close" aria-label="Close">&times;</button>
+      <h3>${qaEsc(p.name)}</h3>
+      <p class="ubx-sub">Choose your options</p>
+      ${group('Size', 'size', sizes)}
+      ${group('Colour', 'color', colors)}
+      <div class="ubx-msg" id="qaMsg" role="status"></div>
+      <div class="ubx-actions">
+        <button type="button" class="btn btn-outline-light" data-qa-cancel>Cancel</button>
+        <button type="button" class="btn btn-primary" data-qa-add><span>Add to Bag</span></button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+
+  const close = () => { ov.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = (e) => { if(e.key === 'Escape') close(); };
+  document.addEventListener('keydown', onKey);
+  ov.addEventListener('click', (e) => {
+    if(e.target === ov || e.target.closest('.ubx-close') || e.target.closest('[data-qa-cancel]')) { close(); return; }
+    const opt = e.target.closest('.qa-opt');
+    if(opt){
+      opt.parentElement.querySelectorAll('.qa-opt').forEach(o => o.classList.remove('sel'));
+      opt.classList.add('sel');
+      return;
+    }
+    if(e.target.closest('[data-qa-add]')){
+      const pick = (key) => { const el = ov.querySelector(`[data-group="${key}"] .qa-opt.sel`); return el ? el.getAttribute('data-val') : null; };
+      const size = sizes.length ? pick('size') : null;
+      const color = colors.length ? pick('color') : null;
+      const msg = document.getElementById('qaMsg');
+      if(sizes.length && !size){ msg.textContent = 'Please choose a size.'; return; }
+      if(colors.length && !color){ msg.textContent = 'Please choose a colour.'; return; }
+      msg.textContent = '';
+      sendToBag(p.id, size, color, btn, (ok) => { if(ok) close(); else msg.textContent = 'Could not add this item. Please try again.'; });
+    }
+  });
+}
+
 function initQuickAddButtons(){
   document.body.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-quick-add]');
     if(!btn) return;
     e.preventDefault();
     const id = btn.getAttribute('data-quick-add');
-    Cart.add(id, null, null, 1);
-    btn.classList.remove('pulse'); void btn.offsetWidth; btn.classList.add('pulse');
-    showToast('Added to bag', 'bag');
+
+    if(!isSignedIn()){
+      showToast('Please sign in to add to your bag', 'bag');
+      setTimeout(() => { location.href = 'profile.html'; }, 1000);
+      return;
+    }
+    const p = ZProducts[id];
+    const sizes = ((p && p.sizes) || []).map(qaOptionName).filter(Boolean);
+    const colors = ((p && p.colors) || []).map(qaOptionName).filter(Boolean);
+    if(p && (sizes.length || colors.length)){ openQuickAddPicker(p, sizes, colors, btn); return; }
+    sendToBag(id, null, null, btn);
   });
 }
 
@@ -1811,6 +1910,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderBottomNav(current);
   renderFooter();
   updateNavBadges();
+  syncCartBadge();
   initScrollReveal();
   initNewsletterForm();
   initWishlistButtons();
@@ -1918,6 +2018,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(ZalmaAPI && ZalmaAPI.getProducts){
       ZalmaAPI.getProducts().then(res => {
         const products = res.products.slice(0, 10);
+        products.forEach(p => { ZProducts[p.id] = p; });
         grid.innerHTML = products.map((p, i) => productCardHTML(p, i)).join('');
         animateProductGrid(grid);
       }).catch(() => {
