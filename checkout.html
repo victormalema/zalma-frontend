@@ -1261,7 +1261,9 @@
               openModal({
                 icon: 'check',
                 title: 'Payment received',
-                body: `Thank you — your ZALMA order is confirmed. When your package arrives, scan the QR card inside it from the Rewards section to claim your ${pts} points.`,
+                body: pts > 0
+                  ? `Thank you — your ZALMA order is confirmed. When your package arrives, scan the QR card inside it from the Rewards section to claim your ${pts} points.`
+                  : 'Thank you — your ZALMA order is confirmed.',
                 actionLabel: 'View My Orders',
                 actionHref: 'orders.html'
               });
