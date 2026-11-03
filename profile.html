@@ -404,6 +404,7 @@
     #googleBtn {
       display: flex;
       justify-content: center;
+      min-height: 44px;
     }
     .auth-toggle {
       text-align: center;
@@ -1364,12 +1365,19 @@
 
     const GOOGLE_CLIENT_ID = '645289055152-jaqmdu0on7cc94vllo970lplb3p4c0rb.apps.googleusercontent.com';
 
-    function renderGoogleButton() {
+    // Google's script loads with async/defer, so it may not be ready when the
+    // form first renders. Retry every 100ms for up to ~5 seconds until it is.
+    function renderGoogleButton(attempt = 0) {
       const target = document.getElementById('googleBtn');
-      if (!target || typeof google === 'undefined') return;
+      if (!target) return;   // the form was replaced (e.g. user logged in), stop
+
+      if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
+        if (attempt < 50) setTimeout(() => renderGoogleButton(attempt + 1), 100);
+        return;
+      }
 
       google.accounts.id.initialize({
-           client_id: GOOGLE_CLIENT_ID,
+        client_id: GOOGLE_CLIENT_ID,
         callback: async (response) => {
           try {
             const ref = new URLSearchParams(location.search).get('ref');
@@ -1435,7 +1443,8 @@
           orders.slice(0, 2).map(orderCardHTML).join('') :
           '<div class="order-empty">No orders yet.</div>';
       }).catch(() => {
-        document.getElementById('orderPreview').innerHTML = '<div class="order-empty">Could not load orders.</div>';
+        const preview = document.getElementById('orderPreview');
+        if (preview) preview.innerHTML = '<div class="order-empty">Could not load orders.</div>';
       });
 
       // Profile menu
