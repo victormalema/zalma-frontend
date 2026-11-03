@@ -124,7 +124,7 @@
       </h1>
     </div>
     <div class="video-frame" id="frame" role="img" aria-label="ZALMA campaign video">
-      <video id="bgVideo" autoplay muted loop playsinline preload="metadata">
+      <video id="bgVideo" autoplay muted loop playsinline preload="metadata" disablepictureinpicture controlslist="nodownload nofullscreen noremoteplayback" poster="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">
         <source src="first video.mp4" type="video/mp4">
       </video>
     </div>
@@ -153,6 +153,70 @@
   const brandSlot = document.getElementById('brandSlot');
   const frameSlot = document.getElementById('frameSlot');
   const enterBtn  = document.getElementById('enterBtn');
+
+  // ---------- FORCE AUTOPLAY ON IPHONE / ALL BROWSERS ----------
+  // Ensure the video is muted, has playsinline, and that play() is called
+  // after any user interaction or on load to avoid native play button.
+  video.muted = true;
+  video.setAttribute('muted', '');
+  video.setAttribute('playsinline', '');
+  video.setAttribute('webkit-playsinline', '');
+  // Remove native controls entirely (they're not set, but just in case)
+  video.removeAttribute('controls');
+  // Hide any possible UI
+  video.style.pointerEvents = 'none';
+
+  function attemptPlay() {
+    // If the video is paused, try to play it.
+    if (video.paused) {
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          // Autoplay prevented; try again on first user interaction.
+          // This is common on iOS low power mode, etc.
+        });
+      }
+    }
+  }
+
+  // Try immediately on DOM ready / load
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    attemptPlay();
+  } else {
+    document.addEventListener('DOMContentLoaded', attemptPlay);
+  }
+  window.addEventListener('load', attemptPlay);
+  // Also attempt when the page becomes visible (tab switch)
+  document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) attemptPlay();
+  });
+  // Fallback: play on first touch or click anywhere on the document.
+  // We only need to trigger once, so we remove listeners after first attempt.
+  function triggerPlayOnce() {
+    attemptPlay();
+    document.removeEventListener('touchstart', triggerPlayOnce);
+    document.removeEventListener('click', triggerPlayOnce);
+  }
+  document.addEventListener('touchstart', triggerPlayOnce, { passive: true, once: true });
+  document.addEventListener('click', triggerPlayOnce, { passive: true, once: true });
+
+  // Additionally, iOS sometimes requires the video to be loaded and then played.
+  video.addEventListener('loadeddata', attemptPlay);
+  video.addEventListener('canplay', attemptPlay);
+
+  // Some browsers will show a play button if the video is paused.
+  // We can force the video to play whenever it gets paused (unless it's ended).
+  video.addEventListener('pause', function() {
+    // Only resume if it hasn't ended and not due to being off-screen etc.
+    // Use a small timeout to avoid infinite loops.
+    if (!video.ended) {
+      setTimeout(() => { if (video.paused) video.play().catch(() => {}); }, 300);
+    }
+  });
+
+  // Also ensure that if the video stalls, we try to play again.
+  video.addEventListener('stalled', attemptPlay);
+  video.addEventListener('suspend', attemptPlay);
 
   // Letter-by-letter reveal, runs once on load.
   // Slow, deliberate pacing: ~220ms between each letter of "ZALMA".
