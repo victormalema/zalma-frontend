@@ -1179,6 +1179,12 @@
         ZalmaAPI.getRewards().then(res => {
           balanceEl.textContent = res.points_balance.toLocaleString();
 
+          // Redemption rules come from the server so this page never disagrees with it.
+          const minPts = res.min_redemption_points || 200;
+          const rate = res.kes_per_point_redeemed != null ? res.kes_per_point_redeemed : 0.5;
+          const capPct = res.max_redemption_percent_of_order || 30;
+          renderEarn(res);
+
           const ledgerRows = res.ledger && res.ledger.length ?
             res.ledger.map(entry => `
               <div class="earn-row">
@@ -1201,11 +1207,12 @@
             <div class="reward-card">
               <div class="r-body">
                 <div class="r-name">Redeem Points</div>
-                <p class="small" style="margin-bottom:var(--sp-3);">Minimum 100 points. 1 point = KES 1 off.</p>
+                <p class="small" style="margin-bottom:var(--sp-3);">Minimum ${minPts} points. 100 points = KES ${(100 * rate).toLocaleString()} off. A code covers up to ${capPct}% of an order.</p>
                 <div class="redeem-form">
-                  <input id="redeemAmount" type="number" min="100" step="50" value="100" placeholder="Enter points">
+                  <input id="redeemAmount" type="number" min="${minPts}" step="50" value="${minPts}" placeholder="Enter points">
                   <button class="btn btn-primary btn-full" id="redeemBtn">Redeem</button>
                 </div>
+                <p class="small" id="redeemPreview" style="margin-top:var(--sp-2);opacity:0.6;"></p>
               </div>
             </div>
             <div style="grid-column:1/-1;">
@@ -1214,10 +1221,19 @@
             </div>
           `;
 
+          const amountInput = document.getElementById('redeemAmount');
+          const previewEl = document.getElementById('redeemPreview');
+          const showPreview = () => {
+            const n = parseInt(amountInput.value, 10);
+            previewEl.textContent = n >= minPts ? `${n.toLocaleString()} points = KES ${(n * rate).toLocaleString()} off` : '';
+          };
+          amountInput.addEventListener('input', showPreview);
+          showPreview();
+
           document.getElementById('redeemBtn').addEventListener('click', () => {
-            const amount = parseInt(document.getElementById('redeemAmount').value, 10);
-            if (!amount || amount < 100) {
-              showToast('Enter at least 100 points', 'cart');
+            const amount = parseInt(amountInput.value, 10);
+            if (!amount || amount < minPts) {
+              showToast(`Enter at least ${minPts} points`, 'cart');
               return;
             }
             if (amount > res.points_balance) {
@@ -1228,7 +1244,7 @@
               openModal({
                 icon: 'check',
                 title: 'Points Redeemed',
-                body: `Your code is <strong>${result.code}</strong> — worth KES ${result.discount_value.toLocaleString()} off your next order.`,
+                body: `Your code is <strong>${result.code}</strong> — worth KES ${result.discount_value.toLocaleString()} off, up to ${result.max_order_percent || capPct}% of an order.`,
                 actionLabel: 'Got it'
               });
               load();
@@ -1246,19 +1262,24 @@
 
       load();
 
-      earnList.innerHTML = `
+      function renderEarn(res) {
+        const bonus = res && res.earn_multiplier > 1
+          ? ` Your ×${res.earn_multiplier.toFixed(2)} bonus level applies.` : '';
+        const next = res && res.next_multiplier_at
+          ? ` Next bonus level at ${res.next_multiplier_at.toLocaleString()} lifetime points.` : '';
+        earnList.innerHTML = `
         <div class="earn-row">
           <div class="e-icon">${Icon.bag}</div>
           <div class="e-body">
             <h4>Shop with ZALMA</h4>
-            <p>Earn 50 points on every product you buy — scan the QR card in your package to claim them.</p>
+            <p>Earn 1 point for every KES 100 you spend — scan the QR card in your package to claim them.${bonus}${next}</p>
           </div>
         </div>
         <div class="earn-row">
           <div class="e-icon">${Icon.gift}</div>
           <div class="e-body">
             <h4>Refer a Friend</h4>
-            <p>Share your referral code above. When they place their first order, you earn a bonus.</p>
+            <p>Share your referral code above. When they place their first paid order, you earn 300 points (up to 10 friends a year).</p>
           </div>
         </div>
         <div class="earn-row">
@@ -1269,6 +1290,8 @@
           </div>
         </div>
       `;
+      }
+      renderEarn(null);
     });
   </script>
 
