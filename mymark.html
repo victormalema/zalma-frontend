@@ -790,7 +790,8 @@
       gift: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="8" width="16" height="12" rx="1"/><path d="M4 12h16M12 8v12M12 8C9 8 8 6.5 8 5.2 8 4 9 3 10.2 3c1.7 0 1.8 3 1.8 5Zm0 0c3 0 4-1.5 4-2.8C16 4 15 3 13.8 3c-1.7 0-1.8 3-1.8 5Z"/></svg>`,
       eye: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="2.6"/></svg>`,
       crown: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8 7 11l5-6 5 6 4-3-1.6 9H4.6L3 8Z"/></svg>`,
-      flame: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2c1 3-2 4-2 7a4 4 0 1 0 8 0c0-1-1-1.5-1-2 2 1 3 3.5 3 6a6 6 0 1 1-12 0c0-4 2-4 4-11Z"/></svg>`
+      flame: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 2c1 3-2 4-2 7a4 4 0 1 0 8 0c0-1-1-1.5-1-2 2 1 3 3.5 3 6a6 6 0 1 1-12 0c0-4 2-4 4-11Z"/></svg>`,
+      download: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v12m0 0-4-4m4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>`
     };
 
     const NAV_ITEMS = [
@@ -1342,6 +1343,87 @@
       }
     }
 
+    // ——— iOS detection ———
+    function isIOS() {
+      return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+             (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    }
+
+    // ——— Convert canvas to a Blob reliably ———
+    function canvasToBlob(canvas) {
+      return new Promise((resolve) => {
+        if (canvas.toBlob) {
+          canvas.toBlob((blob) => resolve(blob), 'image/png');
+        } else {
+          // Fallback for very old browsers
+          const dataUrl = canvas.toDataURL('image/png');
+          const byteString = atob(dataUrl.split(',')[1]);
+          const ab = new ArrayBuffer(byteString.length);
+          const ia = new Uint8Array(ab);
+          for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+          resolve(new Blob([ab], { type: 'image/png' }));
+        }
+      });
+    }
+
+    // ——— Download / share handler ———
+    async function handleRankDownload(canvas, cardCode) {
+      const filename = 'zalma-' + cardCode + '.png';
+
+      try {
+        const blob = await canvasToBlob(canvas);
+        if (!blob) { showToast('Could not prepare image', 'download'); return; }
+
+        const file = new File([blob], filename, { type: 'image/png' });
+
+        // iOS + any browser with file-sharing support: use Web Share API
+        // This lets iPhone users tap "Save Image" to save to Photos.
+        if (isIOS() && navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: 'ZALMA Rank Card',
+              text: 'My ZALMA rank card'
+            });
+            return;
+          } catch (err) {
+            // If the user cancelled share, just bail silently
+            if (err && err.name === 'AbortError') return;
+            // Otherwise fall through to the image-open fallback below
+          }
+        }
+
+        // Non-iOS (or iOS without file share): use the classic blob download
+        if (!isIOS()) {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(url), 1000);
+          return;
+        }
+
+        // iOS fallback: open the image in a new tab so the user can
+        // long-press and choose "Save Image".
+        const url = URL.createObjectURL(blob);
+        const win = window.open(url, '_blank');
+        if (!win) {
+          showToast('Allow pop-ups to save the image', 'download');
+          URL.revokeObjectURL(url);
+        } else {
+          showToast('Long-press the image → Save Image', 'download');
+          // Revoke a bit later so the new tab has time to load it
+          setTimeout(() => URL.revokeObjectURL(url), 60000);
+        }
+      } catch (e) {
+        console.error('Download failed:', e);
+        showToast('Could not save the image', 'download');
+      }
+    }
+
     async function renderRankGallery() {
       const gallery = document.getElementById('rankGallery');
       if (!gallery) return;
@@ -1392,12 +1474,7 @@
             const btn = document.createElement('button');
             btn.className = 'btn-outline';
             btn.textContent = 'Download';
-            btn.addEventListener('click', () => {
-              const link = document.createElement('a');
-              link.download = 'zalma-' + card.code + '.png';
-              link.href = canvas.toDataURL('image/png');
-              link.click();
-            });
+            btn.addEventListener('click', () => handleRankDownload(canvas, card.code));
             wrap.appendChild(btn);
           }
 
