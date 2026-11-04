@@ -1671,19 +1671,26 @@ function initPreorder(){
     loadMine();
   });
 
+  /* Navbar shirt icon: tell the visitor when no lot is open instead of doing nothing */
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href$="#preorder"]');
+    if(a && section.hidden){ e.preventDefault(); showToast('No pre-order is open right now', 'bag'); }
+  });
+
   /* Load open items; the whole section stays hidden when there is no live lot */
   ZalmaAPI.getPreorderItems().then(res => {
     const list = (res && res.items) || [];
-    if(!list.length) return;
+    if(!list.length){ console.info('[preorder] API returned no open items, so the section stays hidden'); return; }
     list.forEach(it => { items[it.id] = it; });
     grid.innerHTML = list.map((it, i) => preorderCardHTML(it, i)).join('');
     document.getElementById('poLot').textContent = list[0].lot_label || 'Lot 02';
     const firstClose = list.map(i => i.closes_at).filter(Boolean).sort()[0];
     document.getElementById('poCloses').textContent = poCloseLabel(firstClose);
     section.hidden = false;
+    if(location.hash === '#preorder') section.scrollIntoView({ behavior: 'smooth' });
     animateProductGrid(grid);
     loadMine();
-  }).catch(() => { /* leave hidden */ });
+  }).catch(err => { console.warn('[preorder] could not load items:', err); });
 }
 
 /* ---------- Quick add: saves to the real (server) cart, the same one cart.html shows ---------- */
