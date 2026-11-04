@@ -934,7 +934,7 @@
         <div>
           <span class="eyebrow" id="poLot">Lot 02</span>
           <h2>Pre-Order</h2>
-          <p class="po-sub">The second lot of tees is coming. Reserve yours now &mdash; lot 01 is already on its way, so this is the next window.</p>
+          <p class="po-sub">The second lot of tees is coming. Reserve yours now &mdash; lot 01 is already SOLD OUT, so this is the next window.</p>
         </div>
         <span class="po-closes" id="poCloses"></span>
       </div>
@@ -1541,10 +1541,8 @@ function initWishlistButtons(){
 /* ---------- Pre-order (second lot) ---------- */
 const poEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-function poCloseLabel(iso){
-  if(!iso) return '';
-  const d = new Date(iso);
-  return isNaN(d) ? '' : 'Closes ' + d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+function poCloseLabel(){
+  return 'Arriving in 3 weeks';
 }
 
 function preorderCardHTML(it, i){
