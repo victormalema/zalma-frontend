@@ -1,6 +1,6 @@
 /* =========================================================
    ZALMA API client
-   Wraps every backend call in one place so pages don't needm
+   Wraps every backend call in one place so pages don't need
    raw fetch() code scattered everywhere.
 
    Include this BEFORE each page's own <script> block:
@@ -58,10 +58,11 @@ const ZalmaAPI = {
   updateCartItem(itemId, quantity){ return this._request('/cart/' + itemId, { method: 'PATCH', body: JSON.stringify({ quantity }) }); },
   removeCartItem(itemId){ return this._request('/cart/' + itemId, { method: 'DELETE' }); },
 
-  // ---------- wishlist ----------
-  getWishlist(){ return this._request('/wishlist'); },
-  addToWishlist(productId){ return this._request('/wishlist', { method: 'POST', body: JSON.stringify({ product_id: productId }) }); },
-  removeFromWishlist(productId){ return this._request('/wishlist/' + productId, { method: 'DELETE' }); },
+  // ---------- pre-orders (replaces wishlist) ----------
+  getPreorderItems(){ return this._request('/preorders/items'); },
+  getMyPreorders(){ return this._request('/preorders'); },
+  createPreorder(payload){ return this._request('/preorders', { method: 'POST', body: JSON.stringify(payload) }); },
+  cancelPreorder(id){ return this._request('/preorders/' + encodeURIComponent(id), { method: 'DELETE' }); },
 
   // ---------- checkout & orders ----------
   checkout(shippingAddress){ return this._request('/checkout', { method: 'POST', body: JSON.stringify({ shipping_address: shippingAddress }) }); },

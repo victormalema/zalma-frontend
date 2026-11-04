@@ -388,18 +388,6 @@
       padding: 5px 10px; z-index: 2; font-weight: 500;
       border: 1px solid rgba(220,225,232,0.20);
     }
-    .product-card .wishlist-btn {
-      position: absolute; top: var(--sp-3); right: var(--sp-3);
-      width: 32px; height: 32px; border-radius: 50%;
-      background: rgba(11,10,12,0.65); backdrop-filter: blur(4px);
-      border: 1px solid rgba(255,255,255,0.1);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 2; color: #fff; transition: all 0.3s ease; cursor: pointer;
-    }
-    .product-card .wishlist-btn:hover { background: rgba(11,10,12,0.9); border-color: rgba(255,255,255,0.25); }
-    .product-card .wishlist-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.6; }
-    .product-card .wishlist-btn.active svg { fill: var(--c-silver); stroke: var(--c-silver); }
-    .product-card .wishlist-btn.pulse { animation: pulseScale 0.5s ease; }
     @keyframes pulseScale { 0% { transform: scale(1); } 50% { transform: scale(1.25); } 100% { transform: scale(1); } }
     .product-card .quick-add-btn {
       position: absolute; bottom: var(--sp-3); left: var(--sp-3); right: var(--sp-3);
@@ -529,6 +517,32 @@
       color: var(--c-ink-soft); font-size: 22px; line-height: 1; cursor: pointer;
     }
     .ubx-close:hover { color: #fff; }
+
+    /* ——— Pre-order (second lot) ——— */
+    #preorder { scroll-margin-top: calc(var(--nav-h) + 16px); }
+    .po-sub { font-size: 13px; color: var(--c-ink-soft); max-width: 520px; margin-top: 6px; line-height: 1.5; }
+    .po-closes { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--c-ink-faint); }
+    .po-btn {
+      width: 100%; margin-top: var(--sp-3); padding: 11px 14px; cursor: pointer;
+      background: transparent; color: #fff; font-family: inherit;
+      font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase;
+      border: 1px solid rgba(255,255,255,0.25); transition: all 0.3s ease;
+    }
+    .po-btn:hover { background: #fff; color: #0b0a0c; border-color: #fff; }
+    .po-mine { margin-top: var(--sp-5); padding-top: var(--sp-4); border-top: 1px solid var(--c-line); }
+    .po-mine h4 { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--c-ink-faint); font-weight: 400; margin-bottom: var(--sp-3); }
+    .po-row { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: 10px 0; border-bottom: 1px solid var(--c-line); font-size: 13px; color: var(--c-ink-soft); }
+    .po-row strong { color: #fff; font-weight: 400; }
+    .po-row .po-status { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--c-silver); margin-left: 8px; }
+    .po-cancel { background: none; border: 0; color: var(--c-ink-faint); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; font-family: inherit; }
+    .po-cancel:hover { color: #ff8b8b; }
+    .ubx-dialog input[type="tel"] {
+      width: 100%; box-sizing: border-box; padding: 13px 14px; font-size: 14px;
+      background: rgba(255,255,255,0.04); color: #fff;
+      border: 1px solid rgba(255,255,255,0.12); outline: none; font-family: inherit;
+    }
+    .ubx-dialog input[type="tel"]:focus { border-color: var(--c-silver); }
+    .po-note { font-size: 12px; color: var(--c-ink-faint); margin-top: 8px; line-height: 1.5; }
 
     /* Scan-to-claim modal */
     .scan-frame {
@@ -901,6 +915,25 @@
     </div>
   </section>
 
+  <!-- ===== PRE-ORDER · SECOND LOT ===== -->
+  <section class="container" id="preorder" hidden>
+    <div class="arrivals-panel reveal">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow" id="poLot">Lot 02</span>
+          <h2>Pre-Order</h2>
+          <p class="po-sub">The second lot of tees is coming. Reserve yours now &mdash; lot 01 is already on its way, so this is the next window.</p>
+        </div>
+        <span class="po-closes" id="poCloses"></span>
+      </div>
+      <div class="product-grid" id="preorderGrid"></div>
+      <div class="po-mine" id="poMine" hidden>
+        <h4>Your reservations</h4>
+        <div id="poMineList"></div>
+      </div>
+    </div>
+  </section>
+
   <!-- ===== REWARDS PANEL ===== -->
   <section class="container">
     <div class="rewards-panel reveal">
@@ -1026,6 +1059,33 @@
     <div class="ubx-actions">
       <button type="button" class="btn btn-outline-light" id="scanCancel">Cancel</button>
       <button type="button" class="btn btn-primary" id="scanSubmit"><span>Claim</span></button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PRE-ORDER RESERVE MODAL ===== -->
+<div class="ubx-overlay" id="poOverlay" aria-hidden="true">
+  <div class="ubx-dialog" role="dialog" aria-modal="true" aria-labelledby="poTitle">
+    <button type="button" class="ubx-close" id="poClose" aria-label="Close">&times;</button>
+    <h3 id="poTitle">Reserve your piece</h3>
+    <p class="ubx-sub" id="poItemLine"></p>
+    <div id="poSizeWrap"><label>Size</label><div class="qa-opts" id="poSizeOpts"></div></div>
+    <div id="poColorWrap"><label>Colour</label><div class="qa-opts" id="poColorOpts"></div></div>
+    <label>Quantity</label>
+    <div class="qa-opts" id="poQtyOpts">
+      <button type="button" class="qa-opt sel" data-val="1">1</button>
+      <button type="button" class="qa-opt" data-val="2">2</button>
+      <button type="button" class="qa-opt" data-val="3">3</button>
+      <button type="button" class="qa-opt" data-val="4">4</button>
+      <button type="button" class="qa-opt" data-val="5">5</button>
+    </div>
+    <label for="poPhone">Phone number</label>
+    <input type="tel" id="poPhone" placeholder="0712 345 678" autocomplete="tel" />
+    <p class="po-note">No payment now. We&rsquo;ll message you on this number when the lot is ready.</p>
+    <div class="ubx-msg" id="poMsg" role="status"></div>
+    <div class="ubx-actions">
+      <button type="button" class="btn btn-outline-light" id="poCancel">Cancel</button>
+      <button type="button" class="btn btn-primary" id="poSubmit"><span>Reserve</span></button>
     </div>
   </div>
 </div>
@@ -1231,27 +1291,9 @@ const Cart = {
   clear(){ Store.set('cart', []); updateNavBadges(); }
 };
 
-const Wishlist = {
-  items(){ return Store.get('wishlist', []); },
-  has(id){ return this.items().includes(id); },
-  toggle(id){
-    let items = this.items();
-    if(items.includes(id)){ items = items.filter(i => i !== id); }
-    else{ items.push(id); }
-    Store.set('wishlist', items);
-    updateNavBadges();
-    return items.includes(id);
-  }
-};
-
 function updateNavBadges(){
   document.querySelectorAll('[data-cart-count]').forEach(el => {
     const n = (window.__zCartCount != null) ? window.__zCartCount : Cart.count();
-    el.textContent = n;
-    el.style.display = n > 0 ? 'flex' : 'none';
-  });
-  document.querySelectorAll('[data-wishlist-count]').forEach(el => {
-    const n = Wishlist.items().length;
     el.textContent = n;
     el.style.display = n > 0 ? 'flex' : 'none';
   });
@@ -1264,6 +1306,7 @@ const Icon = {
   rewards: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h16v3H4z"/><path d="M6 11h12v9a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-9Z"/><path d="M12 8V6a2 2 0 1 0-2 2M12 8V6a2 2 0 1 1 2 2"/></svg>`,
   profile: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c1.3-3.5 4-5.2 7-5.2s5.7 1.7 7 5.2"/></svg>`,
   search: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>`,
+  preorder: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 3 3 6l2 4 2-1v11h10V9l2 1 2-4-5-3a4 4 0 0 1-8 0Z"/></svg>`,
   heart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 20.5s-7.6-4.7-9.9-9.4C.6 7.8 2 4.6 5.1 3.8c2-.5 3.9.3 5 2C11.1 4 13 3.3 15 3.8c3.1.8 4.5 4 3 7.3-2.3 4.7-9.9 9.4-9.9 9.4Z"/></svg>`,
   cart: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 4h2l2.4 12.2A2 2 0 0 0 9.4 18h7.2a2 2 0 0 0 2-1.6L20 8H6"/><circle cx="10" cy="21" r="1.3"/><circle cx="17" cy="21" r="1.3"/></svg>`,
   menu: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 7h16M4 12h16M4 17h16"/></svg>`,
@@ -1297,9 +1340,8 @@ function renderNavbar(current){
       </ul>
       <div class="nav-actions">
         <a href="collections.html" class="icon-btn utility-icon" aria-label="Search">${Icon.search}</a>
-        <a href="profile.html" class="icon-btn utility-icon icon-wrap" aria-label="Wishlist">
-          ${Icon.heart}
-          <span class="nav-badge" data-wishlist-count style="display:none">0</span>
+        <a href="home.html#preorder" class="icon-btn utility-icon" aria-label="Pre-order" title="Pre-order">
+          ${Icon.preorder}
         </a>
         <a href="cart.html" class="icon-btn utility-icon icon-wrap" aria-label="Cart">
           ${Icon.cart}
@@ -1447,19 +1489,152 @@ function initNewsletterForm(){
   });
 }
 
-function initWishlistButtons(){
-  document.body.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-wishlist-toggle]');
-    if(!btn) return;
-    e.preventDefault();
-    const id = btn.getAttribute('data-wishlist-toggle');
-    const active = Wishlist.toggle(id);
-    document.querySelectorAll(`[data-wishlist-toggle="${id}"]`).forEach(b => {
-      b.classList.toggle('active', active);
-      b.classList.remove('pulse'); void b.offsetWidth; b.classList.add('pulse');
+/* ---------- Pre-order (second lot) ---------- */
+const poEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function poCloseLabel(iso){
+  if(!iso) return '';
+  const d = new Date(iso);
+  return isNaN(d) ? '' : 'Closes ' + d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+}
+
+function preorderCardHTML(it, i){
+  const closes = poCloseLabel(it.closes_at);
+  return `
+  <div class="product-card" style="--i:${i}" data-product-card>
+    <span class="tag">${poEsc(it.lot_label)}</span>
+    <div class="thumb">${it.image ? `<img src="${poEsc(it.image)}" alt="${poEsc(it.name)}" loading="lazy">` : ''}</div>
+    <div class="name">${poEsc(it.name)}</div>
+    <div class="price-row"><span class="price">KES ${Number(it.price).toLocaleString()}</span></div>
+    ${closes ? `<div class="po-closes" style="margin-top:4px">${closes}</div>` : ''}
+    <button type="button" class="po-btn" data-preorder="${poEsc(it.id)}">Reserve</button>
+  </div>`;
+}
+
+function initPreorder(){
+  const section = document.getElementById('preorder');
+  const grid = document.getElementById('preorderGrid');
+  const overlay = document.getElementById('poOverlay');
+  if(!section || !grid || !overlay) return;
+  if(typeof ZalmaAPI === 'undefined' || typeof ZalmaAPI.getPreorderItems !== 'function') return;
+
+  const items = {};
+  let current = null;
+  const sel = { size: null, color: null, qty: 1 };
+  const msg = document.getElementById('poMsg');
+  const submitBtn = document.getElementById('poSubmit');
+  const phoneEl = document.getElementById('poPhone');
+  const setMsg = (t, ok) => { msg.textContent = t || ''; msg.classList.toggle('ok', !!ok); };
+
+  const open = () => { overlay.classList.add('open'); overlay.setAttribute('aria-hidden', 'false'); };
+  const close = () => { overlay.classList.remove('open'); overlay.setAttribute('aria-hidden', 'true'); setMsg(''); };
+
+  function fillOpts(wrapId, optsId, values, key){
+    const wrap = document.getElementById(wrapId);
+    const box = document.getElementById(optsId);
+    wrap.style.display = values.length ? '' : 'none';
+    sel[key] = null;
+    box.innerHTML = values.map(v => `<button type="button" class="qa-opt" data-val="${poEsc(v)}">${poEsc(v)}</button>`).join('');
+  }
+
+  function openFor(it){
+    current = it; sel.qty = 1;
+    document.getElementById('poItemLine').textContent = it.name + ' · KES ' + Number(it.price).toLocaleString();
+    fillOpts('poSizeWrap', 'poSizeOpts', it.sizes || [], 'size');
+    fillOpts('poColorWrap', 'poColorOpts', it.colors || [], 'color');
+    document.querySelectorAll('#poQtyOpts .qa-opt').forEach(b => b.classList.toggle('sel', b.dataset.val === '1'));
+    phoneEl.value = Store.get('po_phone', '') || '';
+    setMsg('');
+    open();
+  }
+
+  [['poSizeOpts', 'size'], ['poColorOpts', 'color'], ['poQtyOpts', 'qty']].forEach(([id, key]) => {
+    document.getElementById(id).addEventListener('click', e => {
+      const b = e.target.closest('.qa-opt'); if(!b) return;
+      b.parentElement.querySelectorAll('.qa-opt').forEach(x => x.classList.remove('sel'));
+      b.classList.add('sel');
+      sel[key] = key === 'qty' ? parseInt(b.dataset.val, 10) : b.dataset.val;
     });
-    showToast(active ? 'Added to wishlist' : 'Removed from wishlist', 'heart');
   });
+
+  document.getElementById('poClose').addEventListener('click', close);
+  document.getElementById('poCancel').addEventListener('click', close);
+  overlay.addEventListener('click', e => { if(e.target === overlay) close(); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape' && overlay.classList.contains('open')) close(); });
+
+  grid.addEventListener('click', e => {
+    const btn = e.target.closest('[data-preorder]'); if(!btn) return;
+    if(!isSignedIn()){
+      showToast('Please sign in to reserve', 'bag');
+      setTimeout(() => { location.href = 'profile.html'; }, 1000);
+      return;
+    }
+    const it = items[btn.getAttribute('data-preorder')];
+    if(it) openFor(it);
+  });
+
+  submitBtn.addEventListener('click', async () => {
+    if(!current) return;
+    if((current.sizes || []).length && !sel.size){ setMsg('Please choose a size.'); return; }
+    if((current.colors || []).length && !sel.color){ setMsg('Please choose a colour.'); return; }
+    const phone = phoneEl.value.trim();
+    if(!/^(?:\+?254|0)[17]\d{8}$/.test(phone.replace(/[\s\-()]/g, ''))){ setMsg('Enter a valid Kenyan phone number.'); return; }
+
+    submitBtn.disabled = true; setMsg('Reserving…', true);
+    try{
+      await ZalmaAPI.createPreorder({
+        preorder_item_id: current.id, size: sel.size, color: sel.color,
+        quantity: sel.qty || 1, phone: phone
+      });
+      Store.set('po_phone', phone);
+      close();
+      showToast('Reserved — we’ll be in touch', 'bookmark');
+      loadMine();
+    }catch(err){
+      const m = (err && err.message) || '';
+      setMsg(/401|unauthori[sz]ed|token|expired/i.test(m) ? 'Please log in again to reserve.' : (m || 'Could not reserve right now. Please try again.'));
+    }finally{
+      submitBtn.disabled = false;
+    }
+  });
+
+  /* Your reservations (replaces the old wishlist view/remove) */
+  const mineBox = document.getElementById('poMine');
+  const mineList = document.getElementById('poMineList');
+  function loadMine(){
+    if(!isSignedIn() || typeof ZalmaAPI.getMyPreorders !== 'function') return;
+    ZalmaAPI.getMyPreorders().then(res => {
+      const rows = (res && res.items) || [];
+      mineBox.hidden = !rows.length;
+      mineList.innerHTML = rows.map(r => {
+        const opts = [r.size, r.color].filter(Boolean).join(' / ');
+        const name = r.item ? r.item.name : 'Pre-order';
+        return `<div class="po-row"><span><strong>${poEsc(name)}</strong>${opts ? ' · ' + poEsc(opts) : ''} · ×${r.quantity}<span class="po-status">${poEsc(r.status)}</span></span>` +
+               (r.status === 'pending' ? `<button type="button" class="po-cancel" data-po-cancel="${poEsc(r.id)}">Cancel</button>` : '') + `</div>`;
+      }).join('');
+    }).catch(() => {});
+  }
+  mineList.addEventListener('click', async e => {
+    const b = e.target.closest('[data-po-cancel]'); if(!b) return;
+    b.disabled = true;
+    try{ await ZalmaAPI.cancelPreorder(b.getAttribute('data-po-cancel')); showToast('Reservation cancelled', 'bookmark'); }
+    catch(err){ showToast((err && err.message) || 'Could not cancel', 'bookmark'); }
+    loadMine();
+  });
+
+  /* Load open items; the whole section stays hidden when there is no live lot */
+  ZalmaAPI.getPreorderItems().then(res => {
+    const list = (res && res.items) || [];
+    if(!list.length) return;
+    list.forEach(it => { items[it.id] = it; });
+    grid.innerHTML = list.map((it, i) => preorderCardHTML(it, i)).join('');
+    document.getElementById('poLot').textContent = list[0].lot_label || 'Lot 02';
+    const firstClose = list.map(i => i.closes_at).filter(Boolean).sort()[0];
+    document.getElementById('poCloses').textContent = poCloseLabel(firstClose);
+    section.hidden = false;
+    animateProductGrid(grid);
+    loadMine();
+  }).catch(() => { /* leave hidden */ });
 }
 
 /* ---------- Quick add: saves to the real (server) cart, the same one cart.html shows ---------- */
@@ -1566,7 +1741,6 @@ function initQuickAddButtons(){
 }
 
 function productCardHTML(p, i = 0){
-  const wished = Wishlist.has(p.id) ? 'active' : '';
   const hasSale = p.originalPrice && p.originalPrice > p.price;
   const badge = p.tag ? p.tag : (hasSale ? 'Sale' : '');
   return `
@@ -1576,7 +1750,6 @@ function productCardHTML(p, i = 0){
       <div class="thumb">
         <img src="${p.images[0]}" alt="${p.name}" loading="lazy">
         ${p.images[1] ? `<img src="${p.images[1]}" alt="" class="thumb-alt" loading="lazy">` : ''}
-        <button class="wishlist-btn ${wished}" data-wishlist-toggle="${p.id}" aria-label="Toggle wishlist for ${p.name}">${Icon.bookmark}</button>
         <button class="quick-add-btn" data-quick-add="${p.id}" aria-label="Quick add ${p.name} to bag">${Icon.plus} <span>Quick Add</span></button>
       </div>
     </a>
@@ -1962,7 +2135,7 @@ document.addEventListener('DOMContentLoaded', () => {
   syncCartBadge();
   initScrollReveal();
   initNewsletterForm();
-  initWishlistButtons();
+  initPreorder();
   initQuickAddButtons();
   initNavbarScroll();
 
