@@ -58,7 +58,12 @@ const ZalmaAPI = {
   updateCartItem(itemId, quantity){ return this._request('/cart/' + itemId, { method: 'PATCH', body: JSON.stringify({ quantity }) }); },
   removeCartItem(itemId){ return this._request('/cart/' + itemId, { method: 'DELETE' }); },
 
-  // ---------- pre-orders (replaces wishlist) ----------
+  // ---------- wishlist ----------
+  getWishlist(){ return this._request('/wishlist'); },
+  addToWishlist(productId){ return this._request('/wishlist', { method: 'POST', body: JSON.stringify({ product_id: productId }) }); },
+  removeFromWishlist(productId){ return this._request('/wishlist/' + productId, { method: 'DELETE' }); },
+
+  // ---------- pre-orders ----------
   getPreorderItems(){ return this._request('/preorders/items'); },
   getMyPreorders(){ return this._request('/preorders'); },
   createPreorder(payload){ return this._request('/preorders', { method: 'POST', body: JSON.stringify(payload) }); },
