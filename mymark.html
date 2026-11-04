@@ -1231,6 +1231,7 @@
         title: { x: 567, y: 255, w: 186 },
         bar: { x: 227, y: 585, w: 668, h: 18 },
         text: { x: 274, y: 620 },
+        owner: { x: 567, y: 322 },
         track: 'rgba(110,55,10,0.55)',
         titleTop: '#ffd98a', titleBottom: '#f0a63a', glow: 'rgba(255,170,50,0.85)'
       },
@@ -1240,6 +1241,7 @@
         title: { x: 578, y: 492, w: 190 },
         bar: { x: 227, y: 576, w: 668, h: 16 },
         text: { x: 274, y: 609 },
+        owner: { x: 578, y: 545 },
         track: 'rgba(120,60,10,0.45)',
         titleTop: '#f7e2b4', titleBottom: '#e9c178', glow: 'rgba(255,190,90,0.55)'
       }
@@ -1303,6 +1305,49 @@
       ctx.fillText(name, tx, ty);
       ctx.shadowBlur = 0;
       try { ctx.letterSpacing = '0px'; } catch (e) {}
+
+      // Owner name — spaced small caps with gold flourish lines either side
+      let owner = String(meta.name || 'ZALMA Member').trim();
+      if (owner.indexOf('@') > -1) owner = owner.split('@')[0];
+      owner = owner.replace(/[._]+/g, ' ').toUpperCase();
+      const ox = d.owner.x * sx, oy = d.owner.y * sy;
+      const maxOwnerW = 190;
+      ctx.textAlign = 'center';
+      try { ctx.letterSpacing = '3px'; } catch (e) {}
+      let osize = 15;
+      ctx.font = '600 ' + osize + 'px "Cormorant Garamond", serif';
+      let ow = ctx.measureText(owner).width;
+      if (ow > maxOwnerW) {
+        osize = Math.max(9, osize * (maxOwnerW / ow));
+        ctx.font = '600 ' + osize.toFixed(1) + 'px "Cormorant Garamond", serif';
+        ow = ctx.measureText(owner).width;
+      }
+      ctx.fillStyle = '#f6e3bb';
+      ctx.shadowColor = 'rgba(0,0,0,0.75)';
+      ctx.shadowBlur = 6;
+      ctx.fillText(owner, ox, oy);
+      ctx.shadowBlur = 0;
+      try { ctx.letterSpacing = '0px'; } catch (e) {}
+      const half = ow / 2 + 10;
+      [[-1], [1]].forEach(([dir]) => {
+        const g = ctx.createLinearGradient(ox + dir * half, 0, ox + dir * (half + 34), 0);
+        g.addColorStop(0, 'rgba(240,178,92,0.9)');
+        g.addColorStop(1, 'rgba(240,178,92,0)');
+        ctx.strokeStyle = g;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(ox + dir * half, oy);
+        ctx.lineTo(ox + dir * (half + 34), oy);
+        ctx.stroke();
+      });
+      ctx.fillStyle = '#f0b25c';
+      [-1, 1].forEach((dir) => {
+        const dx = ox + dir * (half - 4), r = 1.8;
+        ctx.beginPath();
+        ctx.moveTo(dx, oy - r); ctx.lineTo(dx + r, oy); ctx.lineTo(dx, oy + r); ctx.lineTo(dx - r, oy);
+        ctx.closePath();
+        ctx.fill();
+      });
 
       // Progress bar
       const bx = d.bar.x * sx, by = d.bar.y * sy, bw = d.bar.w * sx, bh = d.bar.h * sy;
