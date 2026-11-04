@@ -146,6 +146,11 @@
     td{ border:none; padding:4px 0; }
     td::before{ content:attr(data-label); display:block; font-size:11px; color:var(--ink-soft); text-transform:uppercase; margin-bottom:2px; }
   }
+  .po-h{ font-family:'Fraunces',serif; font-weight:500; font-size:18px; margin:30px 0 4px; }
+  .pill.confirmed{ background:rgba(64,150,255,0.15); color:#5aa9ff; }
+  .pill.fulfilled, .pill.open{ background:rgba(62,207,142,0.15); color:var(--success); }
+  .pill.closed{ background:rgba(255,255,255,0.08); color:var(--ink-soft); }
+  .btn.small{ padding:6px 12px; font-size:12px; }
 </style>
 </head>
 <body>
@@ -160,6 +165,7 @@
   <button data-tab="orders">Orders</button>
   <button data-tab="users">Users</button>
   <button data-tab="testimonials">Testimonials <span class="badge" id="testimonialBadge" style="display:none"></span></button>
+  <button data-tab="preorders">Pre-Orders</button>
 </nav>
 
 <main id="mainContent">
@@ -459,11 +465,137 @@
     });
   }
 
+  // ---------- Pre-orders ----------
+  // What each reservation may be changed to. Mirrors the backend rules.
+  const PO_NEXT = {
+    pending: ['confirmed', 'cancelled'],
+    confirmed: ['fulfilled', 'cancelled'],
+    fulfilled: [],
+    cancelled: []
+  };
+
+  // Units to make, grouped by shirt / size / colour (cancelled reservations excluded)
+  function poDemandHTML(rows){
+    const live = rows.filter(r => r.status !== 'cancelled');
+    if(!live.length) return '<div class="empty">No reservations yet.</div>';
+    const groups = {};
+    live.forEach(r => {
+      const key = [r.item_name || 'Unknown item', r.size || '', r.color || ''].join('|');
+      groups[key] = (groups[key] || 0) + (Number(r.quantity) || 0);
+    });
+    const lines = Object.keys(groups).sort().map(k => {
+      const [name, size, color] = k.split('|');
+      return `<tr><td data-label="Shirt">${esc(name)}</td><td data-label="Size">${esc(size) || '—'}</td><td data-label="Colour">${esc(color) || '—'}</td><td data-label="Units"><strong>${groups[k]}</strong></td></tr>`;
+    }).join('');
+    const total = Object.values(groups).reduce((a, b) => a + b, 0);
+    return `
+      <table>
+        <thead><tr><th>Shirt</th><th>Size</th><th>Colour</th><th>Units</th></tr></thead>
+        <tbody>${lines}</tbody>
+      </table>
+      <p class="section-sub" style="margin-top:10px">${total} unit${total === 1 ? '' : 's'} reserved in total.</p>`;
+  }
+
+  function poItemRowHTML(i){
+    const stillOpen = i.is_active && (!i.closes_at || new Date(i.closes_at) > new Date());
+    const label = stillOpen ? 'Open' : (i.is_active ? 'Closed (date passed)' : 'Closed');
+    return `
+    <tr>
+      <td data-label="Shirt">${esc(i.name)}<br><span class="mono">${esc(i.lot_label || '')}</span></td>
+      <td data-label="Price">${fmtKES(i.price)}</td>
+      <td data-label="Reserved">${i.reserved_units}</td>
+      <td data-label="Status"><span class="pill ${stillOpen ? 'open' : 'closed'}">${label}</span></td>
+      <td data-label="Action"><button class="btn small po-toggle" data-item-id="${esc(i.id)}" data-active="${i.is_active ? '1' : '0'}">${i.is_active ? 'Close reservations' : 'Reopen'}</button></td>
+    </tr>`;
+  }
+
+  function poRowHTML(r){
+    const opts = [r.size, r.color].filter(Boolean).join(' / ');
+    const next = PO_NEXT[r.status] || [];
+    return `
+    <tr>
+      <td data-label="Customer">${esc(r.customer_name || r.customer_email || 'Unknown')}<br><span class="mono">${esc(r.customer_email || '')}</span></td>
+      <td data-label="Phone">${r.phone ? `<a href="tel:+${esc(r.phone)}" style="color:inherit">${esc(r.phone)}</a>` : '—'}</td>
+      <td data-label="Shirt">${esc(r.item_name || 'Unknown item')}<br><span class="mono">${esc(opts)}</span></td>
+      <td data-label="Qty">${esc(r.quantity)}</td>
+      <td data-label="Date">${fmtDate(r.created_at)}</td>
+      <td data-label="Status">
+        <select class="status-select po-status" data-id="${esc(r.id)}" data-current="${esc(r.status)}" ${next.length ? '' : 'disabled'}>
+          ${[r.status].concat(next).map(s => `<option value="${esc(s)}" ${s === r.status ? 'selected' : ''}>${statusLabel(s)}</option>`).join('')}
+        </select>
+      </td>
+    </tr>`;
+  }
+
+  function loadPreorders(){
+    const el = document.getElementById('panel-preorders');
+    el.innerHTML = '<div class="loading">Loading pre-orders…</div>';
+    ZalmaAPI.getAdminPreorders().then(res => {
+      const rows = res.preorders || [];
+      const items = res.items || [];
+      el.innerHTML = `
+        <h1>Pre-Orders</h1>
+        <p class="section-sub">Reservations for the second lot. Call or message customers on the number they left.</p>
+
+        <h2 class="po-h">What to make</h2>
+        <p class="section-sub">Units per shirt, size and colour.</p>
+        ${poDemandHTML(rows)}
+
+        <h2 class="po-h">Reservations</h2>
+        <p class="section-sub">${rows.length} reservation${rows.length === 1 ? '' : 's'}.</p>
+        ${rows.length ? `
+        <table>
+          <thead><tr><th>Customer</th><th>Phone</th><th>Shirt</th><th>Qty</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody>${rows.map(poRowHTML).join('')}</tbody>
+        </table>` : '<div class="empty">No reservations yet.</div>'}
+
+        <h2 class="po-h">Shirts on pre-order</h2>
+        <p class="section-sub">Closing a shirt hides it from the site and stops new reservations. Existing ones stay.</p>
+        ${items.length ? `
+        <table>
+          <thead><tr><th>Shirt</th><th>Price</th><th>Reserved</th><th>Status</th><th></th></tr></thead>
+          <tbody>${items.map(poItemRowHTML).join('')}</tbody>
+        </table>` : '<div class="empty">No pre-order shirts yet.</div>'}
+      `;
+
+      el.querySelectorAll('.po-status').forEach(sel => {
+        sel.addEventListener('change', () => {
+          sel.disabled = true;
+          ZalmaAPI.updatePreorderStatus(sel.getAttribute('data-id'), sel.value).then(() => {
+            showToast('Reservation updated');
+            loadPreorders();
+          }).catch(err => {
+            showToast(err.message || 'Could not update reservation');
+            sel.value = sel.getAttribute('data-current');
+            sel.disabled = false;
+          });
+        });
+      });
+
+      el.querySelectorAll('.po-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          btn.disabled = true;
+          const makeActive = btn.getAttribute('data-active') !== '1';
+          ZalmaAPI.setPreorderItemActive(btn.getAttribute('data-item-id'), makeActive).then(() => {
+            showToast(makeActive ? 'Reservations reopened' : 'Reservations closed');
+            loadPreorders();
+          }).catch(err => {
+            showToast(err.message || 'Could not update shirt');
+            btn.disabled = false;
+          });
+        });
+      });
+    }).catch(() => {
+      el.innerHTML = '<h1>Pre-Orders</h1><div class="empty">Could not load pre-orders.</div>';
+    });
+  }
+
   const loaders = {
     dashboard: loadDashboard,
     orders: loadOrders,
     users: loadUsers,
     testimonials: loadTestimonials,
+    preorders: loadPreorders,
   };
   const loadedTabs = new Set();
 
@@ -483,6 +615,7 @@
       <div class="tab-panel" id="panel-orders"></div>
       <div class="tab-panel" id="panel-users"></div>
       <div class="tab-panel" id="panel-testimonials"></div>
+      <div class="tab-panel" id="panel-preorders"></div>
     `;
     document.querySelectorAll('nav.tabs button').forEach(btn => {
       btn.addEventListener('click', () => switchTab(btn.getAttribute('data-tab')));
