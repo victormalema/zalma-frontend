@@ -279,6 +279,22 @@
       background: rgba(192,192,200,0.06);
     }
 
+    /* ——— Initiate design picker ——— */
+    .design-picker {
+      display: flex; justify-content: center; gap: 8px; margin-top: var(--sp-3);
+    }
+    .design-picker button {
+      padding: 7px 14px; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+      font-family: var(--f-body); cursor: pointer; background: transparent;
+      color: rgba(255,255,255,0.45); border: 1px solid rgba(255,255,255,0.12);
+      transition: all 0.3s ease;
+    }
+    .design-picker button:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+    .design-picker button.active {
+      color: #1a1205; background: linear-gradient(90deg, #f6c453, #e8913a);
+      border-color: transparent;
+    }
+
     /* ——— Waitlist Overlay ——— */
     .rank-sticky-spacer { position: relative; }
     .rank-section-wrapper { position: relative; background: var(--c-bg); }
@@ -1203,6 +1219,133 @@
       ctx.fillText(line.trim(), x, curY);
     }
 
+    // =========================================================
+    //   INITIATE — two selectable poster designs
+    //   Artwork lives in /images (text-free versions of the posters);
+    //   all numbers are drawn live from the same card/meta data.
+    // =========================================================
+    const INITIATE_DESIGNS = {
+      a: {
+        label: 'Gold',
+        src: 'images/rank-initiate-a.jpg',
+        title: { x: 567, y: 255, w: 186 },
+        bar: { x: 227, y: 585, w: 668, h: 18 },
+        text: { x: 274, y: 620 },
+        track: 'rgba(110,55,10,0.55)',
+        titleTop: '#ffd98a', titleBottom: '#f0a63a', glow: 'rgba(255,170,50,0.85)'
+      },
+      b: {
+        label: 'Armchair',
+        src: 'images/rank-initiate-b.jpg',
+        title: { x: 578, y: 492, w: 190 },
+        bar: { x: 227, y: 576, w: 668, h: 16 },
+        text: { x: 274, y: 609 },
+        track: 'rgba(120,60,10,0.45)',
+        titleTop: '#f7e2b4', titleBottom: '#e9c178', glow: 'rgba(255,190,90,0.55)'
+      }
+    };
+    const INITIATE_STATS_X = 1038;
+    const INITIATE_STATS_Y = [[341, 371], [442, 478], [548, 591], [664, 701]];
+
+    const _rankImgCache = {};
+    function loadRankImage(src) {
+      if (!_rankImgCache[src]) {
+        _rankImgCache[src] = new Promise((resolve) => {
+          const img = new Image();
+          img.onload = () => resolve(img);
+          img.onerror = () => resolve(null);
+          img.src = src;
+        });
+      }
+      return _rankImgCache[src];
+    }
+
+    function getInitiateDesign() {
+      try {
+        const v = localStorage.getItem('zalma_initiate_design');
+        if (v === 'a' || v === 'b') return v;
+      } catch (e) {}
+      return 'a';
+    }
+    function setInitiateDesign(v) {
+      try { localStorage.setItem('zalma_initiate_design', v); } catch (e) {}
+    }
+
+    async function drawInitiatePoster(ctx, W, H, card, meta, variant) {
+      const d = INITIATE_DESIGNS[variant] || INITIATE_DESIGNS.a;
+      const img = await loadRankImage(d.src);
+      if (!img) return false; // artwork missing -> caller falls back to the old design
+      await Promise.all([
+        document.fonts.load('600 40px "Cormorant Garamond"'),
+        document.fonts.load('600 12px Jost')
+      ]).catch(() => {});
+
+      const sx = W / 1131, sy = H / 1600;
+      ctx.drawImage(img, 0, 0, W, H);
+      ctx.textBaseline = 'middle';
+
+      // Title (tier name), auto-fitted to the width the artwork leaves for it
+      const tx = d.title.x * sx, ty = d.title.y * sy;
+      ctx.textAlign = 'center';
+      ctx.font = '600 46px "Cormorant Garamond", serif';
+      try { ctx.letterSpacing = '2px'; } catch (e) {}
+      const name = card.name.toUpperCase();
+      const measured = ctx.measureText(name).width;
+      const size = Math.min(52, 46 * (d.title.w / Math.max(measured, 1)));
+      ctx.font = '600 ' + size.toFixed(1) + 'px "Cormorant Garamond", serif';
+      const tg = ctx.createLinearGradient(0, ty - size / 2, 0, ty + size / 2);
+      tg.addColorStop(0, d.titleTop);
+      tg.addColorStop(1, d.titleBottom);
+      ctx.fillStyle = tg;
+      ctx.shadowColor = d.glow;
+      ctx.shadowBlur = 18;
+      ctx.fillText(name, tx, ty);
+      ctx.fillText(name, tx, ty);
+      ctx.shadowBlur = 0;
+      try { ctx.letterSpacing = '0px'; } catch (e) {}
+
+      // Progress bar
+      const bx = d.bar.x * sx, by = d.bar.y * sy, bw = d.bar.w * sx, bh = d.bar.h * sy;
+      ctx.fillStyle = d.track;
+      roundRect(ctx, bx, by, bw, bh, bh / 2);
+      ctx.fill();
+      const pct = Math.max(0, Math.min(1, card.progress_xp / card.xp_needed));
+      const fw = Math.max(bh, bw * pct);
+      const bg = ctx.createLinearGradient(bx, 0, bx + fw, 0);
+      bg.addColorStop(0, '#ffd24d');
+      bg.addColorStop(1, '#ff8f3a');
+      ctx.fillStyle = bg;
+      ctx.shadowColor = 'rgba(255,160,50,0.6)';
+      ctx.shadowBlur = 8;
+      roundRect(ctx, bx, by, fw, bh, bh / 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      ctx.textAlign = 'left';
+      ctx.font = '600 12px Jost, sans-serif';
+      ctx.fillStyle = '#ffb64a';
+      ctx.fillText(card.progress_xp + ' / ' + card.xp_needed + ' XP', d.text.x * sx, d.text.y * sy);
+
+      // Right-hand stats column
+      const stats = [
+        ['DROPS', meta.drops],
+        ['XP EARNED', Number(meta.lifetime_xp).toLocaleString()],
+        ['DAYS ACTIVE', meta.days_active],
+        ['RANK', Number(meta.rank).toLocaleString()]
+      ];
+      const cx = INITIATE_STATS_X * sx;
+      ctx.textAlign = 'center';
+      stats.forEach((st, i) => {
+        ctx.font = '500 9px Jost, sans-serif';
+        ctx.fillStyle = '#d9a35a';
+        ctx.fillText(st[0], cx, INITIATE_STATS_Y[i][0] * sy);
+        ctx.font = '600 22px Jost, sans-serif';
+        ctx.fillStyle = '#f0b25c';
+        ctx.fillText(String(st[1]), cx, INITIATE_STATS_Y[i][1] * sy);
+      });
+      return true;
+    }
+
     async function drawRankCard(canvas, card, meta) {
       await document.fonts.ready;
       const W = 640,
@@ -1217,6 +1360,12 @@
 
       const palette = TIER_PALETTES[card.code] || TIER_PALETTES.initiate;
       const locked = card.status === 'locked';
+
+      // Initiate uses the poster designs (user-selectable); falls back to the classic card if artwork is missing
+      if (card.code === 'initiate' && !locked) {
+        const drawn = await drawInitiatePoster(ctx, W, H, card, meta, getInitiateDesign());
+        if (drawn) return;
+      }
 
       const grad = ctx.createLinearGradient(0, 0, W, H);
       grad.addColorStop(0, palette.bg[0]);
@@ -1469,6 +1618,25 @@
           wrap.appendChild(canvas);
 
           await drawRankCard(canvas, card, meta);
+
+          if (card.code === 'initiate' && card.status !== 'locked') {
+            const picker = document.createElement('div');
+            picker.className = 'design-picker';
+            const current = getInitiateDesign();
+            Object.keys(INITIATE_DESIGNS).forEach((key) => {
+              const b = document.createElement('button');
+              b.type = 'button';
+              b.textContent = INITIATE_DESIGNS[key].label;
+              if (key === current) b.classList.add('active');
+              b.addEventListener('click', async () => {
+                setInitiateDesign(key);
+                picker.querySelectorAll('button').forEach((x) => x.classList.toggle('active', x === b));
+                await drawRankCard(canvas, card, meta);
+              });
+              picker.appendChild(b);
+            });
+            wrap.appendChild(picker);
+          }
 
           if (card.status !== 'locked') {
             const btn = document.createElement('button');
