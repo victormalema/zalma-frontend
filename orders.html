@@ -998,7 +998,7 @@
         document.body.appendChild(wrap); }
       const toast = document.createElement('div');
       toast.className = 'toast';
-      toast.innerHTML = `${Icon[iconKey] || Icon.check}<span>${message}</span>`;
+      toast.innerHTML = `${Icon[iconKey] || Icon.check}<span>${zEsc(message)}</span>`;
       wrap.appendChild(toast);
       requestAnimationFrame(() => toast.classList.add('show'));
       setTimeout(() => { toast.classList.remove('show');
@@ -1101,12 +1101,12 @@
             ZalmaAPI.getOrder(orderId).then(res => {
               const order = res.order;
               const itemsText = (order.items || []).map(i =>
-                `${i.product_name || 'Product'} (${i.quantity || 1}x)`
+                `${zEsc(i.product_name || 'Product')} (${zEsc(i.quantity || 1)}x)`
               ).join(', ');
               openModal({
                 icon: 'truck',
                 title: `Order #${(order.id || 'ZL0000').slice(0, 8)}`,
-                body: `${itemsText || 'No items'}<br><br>Shipping to: ${order.shipping_address || 'N/A'}<br>Total: KES ${(order.total || 0).toLocaleString()} &middot; Status: ${capitalize(order.status || 'Processing')}`,
+                body: `${itemsText || 'No items'}<br><br>Shipping to: ${zEsc(order.shipping_address || 'N/A')}<br>Total: KES ${(order.total || 0).toLocaleString()} &middot; Status: ${capitalize(order.status || 'Processing')}`,
                 actionLabel: 'Close'
               });
             }).catch(() => {

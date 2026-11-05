@@ -1037,7 +1037,7 @@
         document.body.appendChild(wrap); }
       const toast = document.createElement('div');
       toast.className = 'toast';
-      toast.innerHTML = `${Icon[iconKey] || Icon.check}<span>${message}</span>`;
+      toast.innerHTML = `${Icon[iconKey] || Icon.check}<span>${zEsc(message)}</span>`;
       wrap.appendChild(toast);
       requestAnimationFrame(() => toast.classList.add('show'));
       setTimeout(() => { toast.classList.remove('show');
@@ -1052,10 +1052,10 @@
       const opts = [colorStr, sizeStr].filter(Boolean).join(' · ');
       return `
         <div class="cart-item" data-id="${item.id}">
-          <div class="thumb"><img src="${imgSrc}" alt="${item.product_name}" loading="lazy"></div>
+          <div class="thumb"><img src="${zEsc(imgSrc)}" alt="${zEsc(item.product_name)}" loading="lazy"></div>
           <div class="meta">
-            <div class="name">${item.product_name}</div>
-            ${opts ? `<div class="opts">${opts}</div>` : ''}
+            <div class="name">${zEsc(item.product_name)}</div>
+            ${opts ? `<div class="opts">${zEsc(opts)}</div>` : ''}
             <div class="qty-stepper">
               <button data-qty-down="${item.id}" data-current="${item.quantity}" aria-label="Decrease quantity">&minus;</button>
               <span>${item.quantity}</span>

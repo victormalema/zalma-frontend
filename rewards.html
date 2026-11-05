@@ -1100,7 +1100,7 @@
         document.body.appendChild(wrap); }
       const toast = document.createElement('div');
       toast.className = 'toast';
-      toast.innerHTML = `${Icon[iconKey] || Icon.check}<span>${message}</span>`;
+      toast.innerHTML = `${Icon[iconKey] || Icon.check}<span>${zEsc(message)}</span>`;
       wrap.appendChild(toast);
       requestAnimationFrame(() => toast.classList.add('show'));
       setTimeout(() => { toast.classList.remove('show');
@@ -1190,7 +1190,7 @@
               <div class="earn-row">
                 <div class="e-icon">${entry.points >= 0 ? '+' : ''}${entry.points}</div>
                 <div class="e-body">
-                  <h4>${entry.description || entry.type}</h4>
+                  <h4>${zEsc(entry.description || entry.type)}</h4>
                   <p>${entry.created_at ? new Date(entry.created_at).toLocaleDateString() : 'Recent'}</p>
                 </div>
               </div>`).join('') :
@@ -1200,7 +1200,7 @@
             <div class="reward-card">
               <div class="r-body">
                 <div class="r-name">Your Referral Code</div>
-                <p class="r-points" style="font-size:20px;letter-spacing:2px;color:rgba(255,255,255,0.5);">${res.referral_code || 'N/A'}</p>
+                <p class="r-points" style="font-size:20px;letter-spacing:2px;color:rgba(255,255,255,0.5);">${zEsc(res.referral_code || 'N/A')}</p>
                 <p class="small">${res.referral_count || 0} friend${(res.referral_count || 0) === 1 ? '' : 's'} referred</p>
               </div>
             </div>

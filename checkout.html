@@ -1053,7 +1053,7 @@
         document.body.appendChild(wrap); }
       const toast = document.createElement('div');
       toast.className = 'toast';
-      toast.innerHTML = `${Icon[iconKey] || Icon.check}<span>${message}</span>`;
+      toast.innerHTML = `${Icon[iconKey] || Icon.check}<span>${zEsc(message)}</span>`;
       wrap.appendChild(toast);
       requestAnimationFrame(() => toast.classList.add('show'));
       setTimeout(() => { toast.classList.remove('show');
@@ -1175,7 +1175,7 @@
               <h3>Order Summary</h3>
               ${items.map(item => `
                 <div class="summary-row">
-                  <span>${item.product_name} ${item.color ? '(' + item.color + ')' : ''} ${item.size ? '[' + item.size + ']' : ''} &times; ${item.quantity}</span>
+                  <span>${zEsc(item.product_name)} ${item.color ? '(' + zEsc(item.color) + ')' : ''} ${item.size ? '[' + zEsc(item.size) + ']' : ''} &times; ${item.quantity}</span>
                   <span>KES ${item.subtotal.toLocaleString()}</span>
                 </div>
               `).join('')}

@@ -1477,7 +1477,7 @@ function showToast(message, iconKey){
   }
   const toast = document.createElement('div');
   toast.className = 'toast';
-  toast.innerHTML = `${Icon[iconKey] || ''}<span>${message}</span>`;
+  toast.innerHTML = `${Icon[iconKey] || ''}<span>${zEsc(message)}</span>`;
   wrap.appendChild(toast);
   requestAnimationFrame(() => toast.classList.add('show'));
   setTimeout(() => {
@@ -1800,17 +1800,17 @@ function productCardHTML(p, i = 0){
   const badge = p.tag ? p.tag : (hasSale ? 'Sale' : '');
   return `
   <div class="product-card" style="--i:${i}" data-product-card>
-    ${badge ? `<span class="tag">${badge}</span>` : ''}
-    <a href="product.html?slug=${p.slug}" class="thumb-link">
+    ${badge ? `<span class="tag">${zEsc(badge)}</span>` : ''}
+    <a href="product.html?slug=${encodeURIComponent(p.slug)}" class="thumb-link">
       <div class="thumb">
-        <img src="${p.images[0]}" alt="${p.name}" loading="lazy">
-        ${p.images[1] ? `<img src="${p.images[1]}" alt="" class="thumb-alt" loading="lazy">` : ''}
-        <button class="wishlist-btn ${wished}" data-wishlist-toggle="${p.id}" aria-label="Toggle wishlist for ${p.name}">${Icon.bookmark}</button>
-        <button class="quick-add-btn" data-quick-add="${p.id}" aria-label="Quick add ${p.name} to bag">${Icon.plus} <span>Quick Add</span></button>
+        <img src="${zEsc(p.images[0])}" alt="${zEsc(p.name)}" loading="lazy">
+        ${p.images[1] ? `<img src="${zEsc(p.images[1])}" alt="" class="thumb-alt" loading="lazy">` : ''}
+        <button class="wishlist-btn ${wished}" data-wishlist-toggle="${p.id}" aria-label="Toggle wishlist for ${zEsc(p.name)}">${Icon.bookmark}</button>
+        <button class="quick-add-btn" data-quick-add="${p.id}" aria-label="Quick add ${zEsc(p.name)} to bag">${Icon.plus} <span>Quick Add</span></button>
       </div>
     </a>
-    <a href="product.html?slug=${p.slug}" style="text-decoration:none;color:inherit;">
-      <div class="name">${p.name}</div>
+    <a href="product.html?slug=${encodeURIComponent(p.slug)}" style="text-decoration:none;color:inherit;">
+      <div class="name">${zEsc(p.name)}</div>
       <div class="price-row">
         ${hasSale
           ? `<span class="price-now">KES ${p.price.toLocaleString()}</span><span class="price-was">KES ${p.originalPrice.toLocaleString()}</span>`

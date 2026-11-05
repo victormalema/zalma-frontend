@@ -270,19 +270,19 @@
 
   function orderRowHTML(o){
     return `
-    <tr data-id="${o.id}">
-      <td data-label="Customer">${o.customer_name || o.customer_email || 'Unknown'}<br><span class="mono">${o.customer_email || ''}</span></td>
+    <tr data-id="${esc(o.id)}">
+      <td data-label="Customer">${esc(o.customer_name || o.customer_email || 'Unknown')}<br><span class="mono">${esc(o.customer_email || '')}</span></td>
       <td data-label="Delivery Details">${deliveryHTML(o.shipping_address)}</td>
       <td data-label="Date">${fmtDate(o.created_at)}</td>
       <td data-label="Total">${fmtKES(o.total)}</td>
-      <td data-label="Points">${o.points_earned}</td>
+      <td data-label="Points">${esc(o.points_earned)}</td>
       <td data-label="Status">
-        <select class="status-select" data-order-id="${o.id}" data-current="${esc(o.status)}" ${(NEXT_STATUS[o.status] || []).length ? '' : 'disabled'}>
+        <select class="status-select" data-order-id="${esc(o.id)}" data-current="${esc(o.status)}" ${(NEXT_STATUS[o.status] || []).length ? '' : 'disabled'}>
           ${[o.status].concat(NEXT_STATUS[o.status] || []).map(s => `<option value="${esc(s)}" ${s === o.status ? 'selected' : ''}>${statusLabel(s)}</option>`).join('')}
         </select>
       </td>
       <td data-label="Package Card">
-        ${PRINTABLE.includes(o.status) ? `<button class="btn print-card" data-order-id="${o.id}">Print card</button>` : '<span class="section-sub">After payment</span>'}
+        ${PRINTABLE.includes(o.status) ? `<button class="btn print-card" data-order-id="${esc(o.id)}">Print card</button>` : '<span class="section-sub">After payment</span>'}
       </td>
     </tr>`;
   }
@@ -371,11 +371,11 @@
   function userRowHTML(u){
     return `
     <tr>
-      <td data-label="Name">${u.name || '—'}${u.is_admin ? '<span class="admin-tag">ADMIN</span>' : ''}</td>
-      <td data-label="Email">${u.email}</td>
+      <td data-label="Name">${esc(u.name || '—')}${u.is_admin ? '<span class="admin-tag">ADMIN</span>' : ''}</td>
+      <td data-label="Email">${esc(u.email)}</td>
       <td data-label="Points">${u.points_balance.toLocaleString()}</td>
       <td data-label="Lifetime XP">${u.lifetime_xp.toLocaleString()}</td>
-      <td data-label="Referral Code" class="mono">${u.referral_code}</td>
+      <td data-label="Referral Code" class="mono">${esc(u.referral_code)}</td>
       <td data-label="Joined">${fmtDate(u.created_at)}</td>
     </tr>`;
   }
@@ -404,12 +404,12 @@
 
   function testimonialCardHTML(t){
     return `
-    <div class="card" data-id="${t.id}">
-      <div class="meta"><strong>${t.author_name || 'Unknown'}</strong><span>${fmtDate(t.created_at)}</span></div>
-      <div class="content">"${t.content}"</div>
+    <div class="card" data-id="${esc(t.id)}">
+      <div class="meta"><strong>${esc(t.author_name || 'Unknown')}</strong><span>${fmtDate(t.created_at)}</span></div>
+      <div class="content">"${esc(t.content)}"</div>
       <div class="actions">
-        <button class="btn btn-approve" data-action="approve" data-id="${t.id}">Approve</button>
-        <button class="btn btn-reject" data-action="reject" data-id="${t.id}">Reject</button>
+        <button class="btn btn-approve" data-action="approve" data-id="${esc(t.id)}">Approve</button>
+        <button class="btn btn-reject" data-action="reject" data-id="${esc(t.id)}">Reject</button>
       </div>
     </div>`;
   }

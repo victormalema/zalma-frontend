@@ -1065,7 +1065,7 @@
         document.body.appendChild(wrap); }
       const toast = document.createElement('div');
       toast.className = 'toast';
-      toast.innerHTML = `${Icon[iconKey] || Icon.check}<span>${message}</span>`;
+      toast.innerHTML = `${Icon[iconKey] || Icon.check}<span>${zEsc(message)}</span>`;
       wrap.appendChild(toast);
       requestAnimationFrame(() => toast.classList.add('show'));
       setTimeout(() => { toast.classList.remove('show');
@@ -1116,8 +1116,8 @@
               return `
                 <div class="podium-card rank-${rankNum}">
                   <div class="rank-badge">${rankNum}</div>
-                  <div class="avatar">${initial}</div>
-                  <h3 class="h3">${p.name || 'Member'}</h3>
+                  <div class="avatar">${zEsc(initial)}</div>
+                  <h3 class="h3">${zEsc(p.name || 'Member')}</h3>
                   <p class="small">${(p.points || 0).toLocaleString()} points</p>
                 </div>
               `;
@@ -1130,8 +1130,8 @@
               return `
                 <div class="leaderboard-row">
                   <span class="small">${rankNum}</span>
-                  <div class="avatar">${initial}</div>
-                  <span>${p.name || 'Member'}</span>
+                  <div class="avatar">${zEsc(initial)}</div>
+                  <span>${zEsc(p.name || 'Member')}</span>
                   <span class="lb-points">${(p.points || 0).toLocaleString()} pts</span>
                 </div>
               `;
@@ -1143,8 +1143,8 @@
               const initial = (user.name || 'Z').charAt(0).toUpperCase();
               userRowEl.innerHTML = `
                 <span class="small">${userRank}</span>
-                <div class="avatar">${initial}</div>
-                <span>${user.name || 'You'} (You)</span>
+                <div class="avatar">${zEsc(initial)}</div>
+                <span>${zEsc(user.name || 'You')} (You)</span>
                 <span class="lb-points">${(user.points || 0).toLocaleString()} pts</span>
               `;
             } else {

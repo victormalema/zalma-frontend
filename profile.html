@@ -1221,7 +1221,7 @@
         document.body.appendChild(wrap); }
       const toast = document.createElement('div');
       toast.className = 'toast';
-      toast.innerHTML = `${Icon[iconKey] || Icon.check}<span>${message}</span>`;
+      toast.innerHTML = `${Icon[iconKey] || Icon.check}<span>${zEsc(message)}</span>`;
       wrap.appendChild(toast);
       requestAnimationFrame(() => toast.classList.add('show'));
       setTimeout(() => { toast.classList.remove('show');
@@ -1426,10 +1426,10 @@
         const user = res.user;
         const avatar = (user.name || user.email || 'Z').charAt(0).toUpperCase();
         document.getElementById('profileHeader').innerHTML = `
-          <div class="avatar">${avatar}</div>
+          <div class="avatar">${zEsc(avatar)}</div>
           <div>
-            <h2>${user.name || user.email}</h2>
-            <div class="member-since">Referral code: ${user.referral_code || 'N/A'}</div>
+            <h2>${zEsc(user.name || user.email)}</h2>
+            <div class="member-since">Referral code: ${zEsc(user.referral_code || 'N/A')}</div>
             <a href="mymark.html" class="mark-link">View My Mark Profile →</a>
           </div>
         `;

@@ -7,6 +7,14 @@
      <script src="api.js"></script>
    ========================================================= */
 
+/* Shared HTML-escape helper. Use it on ANY text that came from a user or the
+   server before putting it inside innerHTML / template strings:  ${zEsc(user.name)} */
+function zEsc(v){
+  return String(v == null ? '' : v).replace(/[&<>"']/g, c => (
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]
+  ));
+}
+
 // Change this once you deploy the backend to Render (Step 11):
 const API_BASE = 'https://zalma-backend-1.onrender.com/api';
 

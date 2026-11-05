@@ -974,7 +974,7 @@
         document.body.appendChild(wrap); }
       const toast = document.createElement('div');
       toast.className = 'toast';
-      toast.innerHTML = `${Icon[iconKey] || Icon.check}<span>${message}</span>`;
+      toast.innerHTML = `${Icon[iconKey] || Icon.check}<span>${zEsc(message)}</span>`;
       wrap.appendChild(toast);
       requestAnimationFrame(() => toast.classList.add('show'));
       setTimeout(() => { toast.classList.remove('show');
@@ -1108,8 +1108,8 @@
               return `
                 <div class="badge-card ${unlocked ? '' : 'locked'}">
                   <div class="badge-icon">${unlocked ? iconSvg : Icon.lock}</div>
-                  <h4>${b.name || 'Badge'}</h4>
-                  <p>${unlocked ? 'Unlocked' : (b.description || 'Locked')}</p>
+                  <h4>${zEsc(b.name || 'Badge')}</h4>
+                  <p>${unlocked ? 'Unlocked' : zEsc(b.description || 'Locked')}</p>
                 </div>
               `;
             }).join('');
@@ -1122,8 +1122,8 @@
               return `
                 <div class="podium-card rank-${rankNum}">
                   <div class="rank-badge">${rankNum}</div>
-                  <div class="avatar">${initial}</div>
-                  <h3 class="h3">${p.name || 'Member'}</h3>
+                  <div class="avatar">${zEsc(initial)}</div>
+                  <h3 class="h3">${zEsc(p.name || 'Member')}</h3>
                   <p class="small">${(p.points || 0).toLocaleString()} points</p>
                 </div>
               `;
