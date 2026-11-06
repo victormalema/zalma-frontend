@@ -491,7 +491,7 @@
     a.reward-tile { display: block; color: inherit; text-decoration: none; }
     .reward-tile-action:focus-visible { outline: 1px solid var(--c-silver); outline-offset: 2px; }
 
-    /* Unboxing submit modal */
+    /* Shared modal styles */
     .ubx-overlay {
       position: fixed; inset: 0; z-index: 1100; display: none;
       align-items: center; justify-content: center; padding: var(--sp-4);
@@ -982,13 +982,6 @@
           <div class="tile-value">Package QR</div>
           <div class="tile-points">Claim purchase pts</div>
         </div>
-        <div class="reward-tile reward-tile-action" id="unboxingTile" role="button" tabindex="0" aria-haspopup="dialog">
-          <span class="tile-icon" aria-hidden="true"><svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg"><g fill="none" stroke="url(#tileSilver)" stroke-width="3" stroke-linejoin="miter" stroke-linecap="square"><path d="M6 16 24 9l18 7v19l-18 8-18-8z"/><path d="M6 16l18 8 18-8M24 24v19"/></g><path fill="url(#tileSilver)" d="M13.500 19 30 12.500 34 14 18 20.500zM13 19.500l3 1.200V26l-1.500-1-1.500 1z"/></svg></span>
-          <div class="tile-label">Unboxing</div>
-          <div class="tile-value">Share</div>
-          <div class="tile-points">Earn 75 pts</div>
-        </div>
-      </div>
 
       <div class="social-section">
         <span class="social-label">Follow &amp; Earn</span>
@@ -1038,21 +1031,6 @@
 <div id="footer-root"></div>
 <div id="bottomnav-root"></div>
 
-<!-- ===== UNBOXING SUBMIT MODAL ===== -->
-<div class="ubx-overlay" id="ubxOverlay" aria-hidden="true">
-  <div class="ubx-dialog" role="dialog" aria-modal="true" aria-labelledby="ubxTitle">
-    <button type="button" class="ubx-close" id="ubxClose" aria-label="Close">&times;</button>
-    <h3 id="ubxTitle">Share your unboxing</h3>
-    <p class="ubx-sub">Paste the link to your unboxing video. Once our team reviews and approves it, you'll earn 75 points.</p>
-    <label for="ubxUrl">Video URL</label>
-    <input type="url" id="ubxUrl" placeholder="https://www.tiktok.com/@you/video/..." autocomplete="off" />
-    <div class="ubx-msg" id="ubxMsg" role="status"></div>
-    <div class="ubx-actions">
-      <button type="button" class="btn btn-outline-light" id="ubxCancel">Cancel</button>
-      <button type="button" class="btn btn-primary" id="ubxSubmit"><span>Submit</span></button>
-    </div>
-  </div>
-</div>
 
 <!-- ===== SCAN-TO-CLAIM MODAL ===== -->
 <div class="ubx-overlay" id="scanOverlay" aria-hidden="true">
@@ -1855,67 +1833,6 @@ function initNavbarScroll(){
   }, { passive: true });
 }
 
-/* ---------- Unboxing video submission ---------- */
-function initUnboxingModal(){
-  const tile = document.getElementById('unboxingTile');
-  const overlay = document.getElementById('ubxOverlay');
-  if(!tile || !overlay) return;
-  const input = document.getElementById('ubxUrl');
-  const msg = document.getElementById('ubxMsg');
-  const submitBtn = document.getElementById('ubxSubmit');
-
-  const setMsg = (text, ok) => { msg.textContent = text || ''; msg.classList.toggle('ok', !!ok); };
-  const open = () => {
-    setMsg('');
-    input.value = '';
-    overlay.classList.add('open');
-    overlay.setAttribute('aria-hidden', 'false');
-    setTimeout(() => input.focus(), 50);
-  };
-  const close = () => {
-    overlay.classList.remove('open');
-    overlay.setAttribute('aria-hidden', 'true');
-  };
-
-  tile.addEventListener('click', open);
-  tile.addEventListener('keydown', e => {
-    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); open(); }
-  });
-  document.getElementById('ubxClose').addEventListener('click', close);
-  document.getElementById('ubxCancel').addEventListener('click', close);
-  overlay.addEventListener('click', e => { if(e.target === overlay) close(); });
-  document.addEventListener('keydown', e => { if(e.key === 'Escape' && overlay.classList.contains('open')) close(); });
-  input.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); submitBtn.click(); } });
-
-  submitBtn.addEventListener('click', async () => {
-    const url = input.value.trim();
-    let valid = false;
-    try{ const u = new URL(url); valid = (u.protocol === 'http:' || u.protocol === 'https:'); }catch(e){}
-    if(!valid){ setMsg('Please paste a valid video link (starting with https://).'); return; }
-    if(typeof ZalmaAPI === 'undefined' || typeof ZalmaAPI.submitUnboxing !== 'function'){
-      setMsg('Unboxing submission is not connected in api.js yet.');
-      return;
-    }
-    submitBtn.disabled = true;
-    setMsg('Submitting…', true);
-    try{
-      const res = await ZalmaAPI.submitUnboxing(url);
-      setMsg('');
-      close();
-      showToast((res && res.message) || 'Submitted! Pending review.', 'bookmark');
-    }catch(err){
-      const m = (err && err.message) || '';
-      if(/401|unauthori[sz]ed|token|not logged|log ?in|expired/i.test(m)){
-        setMsg('Please log in again to submit your unboxing.');
-      }else{
-        setMsg(m || 'Could not submit right now. Please try again.');
-      }
-    }finally{
-      submitBtn.disabled = false;
-    }
-  });
-}
-
 /* ---------- Scan package QR to claim purchase points ---------- */
 function initScanModal(){
   const tile = document.getElementById('scanTile');
@@ -2310,10 +2227,7 @@ document.addEventListener('DOMContentLoaded', () => {
       animateProductGrid(grid);
     }
   }
-
-  /* ---------- Unboxing submission ---------- */
-  initUnboxingModal();
-  initScanModal();
+initScanModal();
   initClaimRankPrompt();
 
   document.body.classList.add('page-loaded');

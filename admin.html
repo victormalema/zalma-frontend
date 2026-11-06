@@ -226,7 +226,7 @@
           <div class="stat-card"><div class="label">Points Issued</div><div class="value">${stats.points_issued.toLocaleString()}</div></div>
           <div class="stat-card"><div class="label">Points Redeemed</div><div class="value">${stats.points_redeemed.toLocaleString()}</div></div>
           <div class="stat-card"><div class="label">Pending Testimonials</div><div class="value">${stats.pending_testimonials_count}</div></div>
-          <div class="stat-card"><div class="label">Pending Unboxing</div><div class="value">${stats.pending_unboxing_count}</div></div>
+
         </div>
         <div class="stat-card" style="grid-column:1/-1">
           <div class="label">Orders by Status</div>
@@ -319,7 +319,7 @@
           </div>
         </div>
         <script>window.onload = function(){ window.print(); };<\/script>
-        </body></html>`);
+        ${'</'}body>${'</'}html>`);
       w.document.close();
       if(q.claimed){ showToast('Note: this card was already claimed'); }
     }).catch(err => {
